@@ -1,0 +1,600 @@
+[
+  {
+    "id": 1774041688191,
+    "ts": "2026-03-21T02:51:28.191314",
+    "source": "research",
+    "title": "Curriculum Vitae",
+    "file": "Dr. P. Durgaprasad_CV.docx",
+    "doc_type": "resume",
+    "entities": [
+      {
+        "text": "Curriculum Vitae",
+        "label": "PERSON"
+      },
+      {
+        "text": "Mobile",
+        "label": "GPE"
+      },
+      {
+        "text": "P. Durgaprasad",
+        "label": "PERSON"
+      },
+      {
+        "text": "Dynamic & Hardworking\nAble",
+        "label": "ORG"
+      },
+      {
+        "text": "Competitive Spirit",
+        "label": "PERSON"
+      },
+      {
+        "text": "the Andhra Pradesh State Eligibility Test",
+        "label": "ORG"
+      },
+      {
+        "text": "2017",
+        "label": "DATE"
+      },
+      {
+        "text": "the Telangana State Eligibility Test",
+        "label": "ORG"
+      },
+      {
+        "text": "Asst",
+        "label": "PERSON"
+      },
+      {
+        "text": "Department of H&S",
+        "label": "ORG"
+      },
+      {
+        "text": "Sri Venkatesa Perumal College of Engineering & Technology",
+        "label": "ORG"
+      },
+      {
+        "text": "Puttur",
+        "label": "GPE"
+      },
+      {
+        "text": "April 25th, 2013",
+        "label": "DATE"
+      },
+      {
+        "text": "January 18th, 2014",
+        "label": "DATE"
+      },
+      {
+        "text": "Sri Venkateswara University College of Engineering",
+        "label": "ORG"
+      },
+      {
+        "text": "Sri Venkateswara University",
+        "label": "ORG"
+      },
+      {
+        "text": "Tirupati",
+        "label": "GPE"
+      },
+      {
+        "text": "July",
+        "label": "DATE"
+      },
+      {
+        "text": "2015",
+        "label": "DATE"
+      },
+      {
+        "text": "Department of Mathematics, School of Advanced Sciences",
+        "label": "ORG"
+      },
+      {
+        "text": "Vellore Institute of Technology",
+        "label": "ORG"
+      },
+      {
+        "text": "Chennai Campus",
+        "label": "PERSON"
+      },
+      {
+        "text": "3rd June, 2020",
+        "label": "DATE"
+      },
+      {
+        "text": "Completed Ph.D.",
+        "label": "ORG"
+      },
+      {
+        "text": "2018",
+        "label": "DATE"
+      },
+      {
+        "text": "three",
+        "label": "CARDINAL"
+      },
+      {
+        "text": "S. Vijayakumar Varma",
+        "label": "PERSON"
+      },
+      {
+        "text": "Professor, Department of Mathematics",
+        "label": "ORG"
+      },
+      {
+        "text": "Fluid Dynamics",
+        "label": "WORK_OF_ART"
+      },
+      {
+        "text": "Completed M.Phil",
+        "label": "PRODUCT"
+      }
+    ],
+    "relations": [],
+    "summary": "Here is a concise 3-5 sentence summary: \nDr. P. Durgaprasad is a highly motivated academic professional with a strong background in mathematics and fluid dynamics. He holds a Ph.D. in fluid dynamics and has completed research in heat and mass transfer, MHD fluids, and other related areas. With experience as an Assistant Professor and Academic Consultant, he has developed strong leadership, analytical, and problem-solving skills. His research interests include multi-phase flow modeling, nanofluid, and mathematical biology, among others. Currently, he is working as an Assistant Professor Grade-2 at the Vellore Institute of Technology, Chennai Campus.",
+    "metrics": {
+      "entity_count": 605,
+      "citation_count": 1,
+      "keyword_count": 15,
+      "section_count": 21,
+      "confidence_score": 27
+    },
+    "sections": [
+      {
+        "name": "Career Objectives",
+        "present": true,
+        "ai_summary": "The \"Career Objectives\" section outlines a desire to work in a prestigious organization with opportunities for growth and self-improvement. The goal is to achieve career success through dedication, hard work, and exceeding expectations.",
+        "strength_pct": 18
+      },
+      {
+        "name": "Strengths",
+        "present": true,
+        "ai_summary": "The individual's strengths include a positive attitude, leadership quality, and a dynamic and hardworking nature. They also possess good analytical and problem-solving skills, and are able to work in a team with a competitive spirit.",
+        "strength_pct": 7
+      },
+      {
+        "name": "Educational Qualification",
+        "present": true,
+        "ai_summary": "There is no text to summarize. The \"Educational Qualification\" section is empty.",
+        "strength_pct": 2
+      },
+      {
+        "name": "Other Qualifications",
+        "present": true,
+        "ai_summary": "The candidate qualified for the Andhra Pradesh State Eligibility Test and the Telangana State Eligibility Test in 2017. These qualifications demonstrate their eligibility to teach at the state level in both Andhra Pradesh and Telangana.",
+        "strength_pct": 10
+      },
+      {
+        "name": "Professional Experience",
+        "present": true,
+        "ai_summary": "The individual has held various academic positions, including Assistant Professor and Academic Consultant, at institutions such as Sri Venkatesa Perumal College of Engineering & Technology and Sri Venkateswara University College of Engineering. They are currently working as an Assistant Professor Grade-2 at Vellore Institute of Technology, Chennai Campus, a position they have held since June 2020.",
+        "strength_pct": 26
+      },
+      {
+        "name": "Research Experience",
+        "present": true,
+        "ai_summary": "The individual has a Ph.D. in Fluid Dynamics, completing their dissertation in 2018, and also holds an M.Phil. in Fluid Mechanics, completed in 2015, both under the guidance of Prof. S. Vijayakumar Varma. Their research experience focuses on fluid dynamics, heat and mass transfer, and magnetohydrodynamic (MHD) fluids.",
+        "strength_pct": 39
+      },
+      {
+        "name": "Research interests",
+        "present": true,
+        "ai_summary": "The research interests include various areas such as Multi-Phase flow modeling, Nanofluid, and Mathematical Biology. Additionally, the interests also cover Controllability, Linear and non-linear stability, showcasing a diverse range of topics.",
+        "strength_pct": 5
+      },
+      {
+        "name": "Research Guidance for Ph.D",
+        "present": true,
+        "ai_summary": "The Research Guidance for Ph.D section reports the number of ongoing Ph.D students, with 5 full-time and 1 part-time student. This indicates the current Ph.D student enrollment under research guidance.",
+        "strength_pct": 9
+      },
+      {
+        "name": "Project Guidance for M. Sc Data Science students",
+        "present": true,
+        "ai_summary": "The \"Project Guidance for M. Sc Data Science students\" section provides information on project guidance for students, with 07 ongoing students. It appears to be a brief overview of the project guidance available to M. Sc Data Science students.",
+        "strength_pct": 7
+      },
+      {
+        "name": "Courses Taught",
+        "present": true,
+        "ai_summary": "The \"Courses Taught\" section lists various mathematics and statistics courses taught to students at different levels, including calculus, statistical applications, and differential equations. These courses cater to engineering students, as well as those pursuing a B.Sc degree, and range from introductory to advanced levels.",
+        "strength_pct": 38
+      },
+      {
+        "name": "Awards",
+        "present": true,
+        "ai_summary": "The VIT Faculty Research Awards were received for three consecutive years, 2022, 2023, and 2024. This award was given to the faculty member a total of three times.",
+        "strength_pct": 5
+      },
+      {
+        "name": "Publications",
+        "present": true,
+        "ai_summary": "The \"Publications\" section lists several research articles published in reputable journals, including the Journal of Thermal Analysis and Calorimetry and ZAMM-Journal of Applied Mathematics and Mechanics. These publications focus on topics such as MHD dusty-hybrid nanofluid flow, two-phase flow of dusty Carreau nanofluid, and multi-layer flow of hybrid nanofluid, with applications in biomedical and propulsion fields.",
+        "strength_pct": 70
+      },
+      {
+        "name": "Scopus",
+        "present": true,
+        "ai_summary": "The \"Scopus\" section is not explicitly mentioned in the provided text, which instead appears to list various academic journal publications with their respective impact factors and authors. The listed publications include articles on topics such as MHD hybrid nanofluid flow, triple diffusive free convective MHD fluid flow, and Arrhenius activation energy of tangent hyperbolic nanofluid.",
+        "strength_pct": 70
+      },
+      {
+        "name": "Conference papers",
+        "present": true,
+        "ai_summary": "The \"Conference papers\" section lists several research papers on fluid dynamics, including topics such as MHD flow, Casson fluid flow, and convective conditions. These papers were published in various journals, including Lecture Notes in Mechanical Engineering and International Journal of Pure and Applied Mathematics, between 2020.",
+        "strength_pct": 70
+      },
+      {
+        "name": "Book Published",
+        "present": true,
+        "ai_summary": "The book \"A Case Studies on Unsteady Newtonian Fluid over a Porous plate\" was published in 2017 by LAP LAMBERT Academic Publishing. It was authored by P. Durga Prasad, S.V.K. Varma, and Chakravarthula S K Raju, and consists of 120 pages.",
+        "strength_pct": 17
+      },
+      {
+        "name": "Google scholar",
+        "present": true,
+        "ai_summary": "P. Durgaprasad has a Google Scholar profile with 888 citations, an h-index of 16, and an i10-index of 23. The profile can be accessed at https://scholar.google.co.in/citations?user=9UXCPskAAAAJ.",
+        "strength_pct": 16
+      },
+      {
+        "name": "FDPs / Workshops / Guest Lectures Organized",
+        "present": true,
+        "ai_summary": "The Department of Mathematics at VIT Chennai organized various faculty development programs, workshops, and guest lectures between 2023 and 2025, focusing on topics such as fluid mechanics, research potential, and real analysis. These events included online and offline sessions, ranging from two to five days, and covered recent trends and advances in mathematics.",
+        "strength_pct": 77
+      },
+      {
+        "name": "Extra curriculum activities",
+        "present": true,
+        "ai_summary": "The individual has life memberships in two organizations: the Indian Science Congress and the Andhra Pradesh Society for Mathematical Sciences. These memberships indicate their involvement in extra-curricular activities related to science and mathematics.",
+        "strength_pct": 11
+      },
+      {
+        "name": "Technical Skills",
+        "present": true,
+        "ai_summary": "The Technical Skills section lists proficiency in MS Office, MATLAB, and R Studio. These skills indicate expertise in data analysis, programming, and office software.",
+        "strength_pct": 4
+      },
+      {
+        "name": "Personal Profile",
+        "present": true,
+        "ai_summary": "The personal profile section provides basic information about an individual, including their name, date of birth, and nationality. The individual's name is P. Durgaprasad, an Indian male born on July 31, 1988.",
+        "strength_pct": 15
+      },
+      {
+        "name": "Declaration",
+        "present": true,
+        "ai_summary": "The \"Declaration\" section is a statement affirming the truth of the provided information to the best of the individual's knowledge and belief. It is signed by P. Durgaprasad and dated March 17, 2026, in Chennai.",
+        "strength_pct": 61
+      }
+    ]
+  },
+  {
+    "id": 1774040607443,
+    "ts": "2026-03-21T02:33:27.443243",
+    "source": "research",
+    "title": "A transformer based multi task learning approach to multimodal hate speech detection",
+    "file": "A-transformer-based-multi-task-learning-approach-t_2025_Natural-Language-Pro.pdf",
+    "doc_type": "research_paper",
+    "entities": [
+      {
+        "text": "Natural Language Processing Journal 11",
+        "label": "ORG"
+      },
+      {
+        "text": "2025) 100133",
+        "label": "DATE"
+      },
+      {
+        "text": "ScienceDirect",
+        "label": "ORG"
+      },
+      {
+        "text": "Asif Ekbal",
+        "label": "PRODUCT"
+      },
+      {
+        "text": "Department of Computer Science and Engineering",
+        "label": "ORG"
+      },
+      {
+        "text": "Indian Institute of Technology Patna",
+        "label": "ORG"
+      },
+      {
+        "text": "Bihar",
+        "label": "GPE"
+      },
+      {
+        "text": "India",
+        "label": "GPE"
+      },
+      {
+        "text": "School of Artificial Intelligence and Data Science",
+        "label": "ORG"
+      },
+      {
+        "text": "Indian Institute of Technology Jodhpur",
+        "label": "ORG"
+      },
+      {
+        "text": "Rajasthan",
+        "label": "GPE"
+      },
+      {
+        "text": "CLIP",
+        "label": "ORG"
+      },
+      {
+        "text": "AUC-ROC",
+        "label": "ORG"
+      },
+      {
+        "text": "F1",
+        "label": "CARDINAL"
+      },
+      {
+        "text": "A B S T R A C T\n",
+        "label": "PRODUCT"
+      },
+      {
+        "text": "recent years",
+        "label": "DATE"
+      },
+      {
+        "text": "four",
+        "label": "CARDINAL"
+      },
+      {
+        "text": "meme",
+        "label": "ORG"
+      },
+      {
+        "text": "MTL",
+        "label": "ORG"
+      },
+      {
+        "text": "Contrastive Language Image Pretraining",
+        "label": "ORG"
+      },
+      {
+        "text": "UNiversal\nImage-TExt Representation Learning",
+        "label": "ORG"
+      },
+      {
+        "text": "BERT",
+        "label": "ORG"
+      },
+      {
+        "text": "1",
+        "label": "CARDINAL"
+      },
+      {
+        "text": "today",
+        "label": "DATE"
+      },
+      {
+        "text": "2018",
+        "label": "DATE"
+      },
+      {
+        "text": "180 million",
+        "label": "CARDINAL"
+      },
+      {
+        "text": "Zannettou et al.",
+        "label": "LOC"
+      },
+      {
+        "text": "Suryawanshi",
+        "label": "GPE"
+      },
+      {
+        "text": "al.",
+        "label": "GPE"
+      },
+      {
+        "text": "2020",
+        "label": "DATE"
+      }
+    ],
+    "relations": [],
+    "summary": "Here is a 4-sentence summary of the text: \nOnline hate speech, particularly in the form of memes, has become a significant social issue that can disrupt societal peace. To address this, researchers have developed a multi-task learning approach to detect hateful memes, combining language and visual perception. The proposed framework utilizes Contrastive Language Image Pretraining (CLIP), UNITER, and BERT to train four hateful meme datasets concurrently, allowing for the transfer of common knowledge. The results show that this approach outperforms unimodal and multimodal methods on four multilingual benchmark datasets, achieving high AUC-ROC, accuracy, and F1 scores.",
+    "metrics": {
+      "entity_count": 508,
+      "citation_count": 102,
+      "keyword_count": 15,
+      "section_count": 5,
+      "confidence_score": 83
+    },
+    "sections": [
+      {
+        "name": "A R T I C L E I N F O",
+        "present": true,
+        "ai_summary": "This section provides metadata about the article, including relevant keywords.",
+        "strength_pct": 100
+      },
+      {
+        "name": "A B S T R A C T",
+        "present": true,
+        "ai_summary": "This section summarizes the research paper, focusing on the problem of multimodal hate speech detection.",
+        "strength_pct": 45
+      },
+      {
+        "name": "1. Introduction",
+        "present": true,
+        "ai_summary": "This section introduces the topic of multimodal hate speech detection, highlighting its growing importance in the context of social media.",
+        "strength_pct": 88
+      },
+      {
+        "name": "1.1. Motivations",
+        "present": true,
+        "ai_summary": "This section outlines the motivations for developing a multimodal hate speech classifier, including the need for complete content understanding and rich contextual information.",
+        "strength_pct": 90
+      },
+      {
+        "name": "1.2. Contributions",
+        "present": true,
+        "ai_summary": "This section highlights the contributions of the research paper, including the use of publicly available benchmark datasets for hate speech detection.",
+        "strength_pct": 90
+      }
+    ]
+  },
+  {
+    "id": 1774039768701,
+    "ts": "2026-03-21T02:19:28.701949",
+    "source": "research",
+    "title": "",
+    "file": "A-transformer-based-multi-task-learning-approach-t_2025_Natural-Language-Pro.pdf",
+    "entities": [
+      {
+        "text": "Natural Language Processing Journal 11",
+        "label": "ORG"
+      },
+      {
+        "text": "2025) 100133",
+        "label": "DATE"
+      },
+      {
+        "text": "ScienceDirect",
+        "label": "ORG"
+      },
+      {
+        "text": "Asif Ekbal",
+        "label": "PRODUCT"
+      },
+      {
+        "text": "Department of Computer Science and Engineering",
+        "label": "ORG"
+      },
+      {
+        "text": "Indian Institute of Technology Patna",
+        "label": "ORG"
+      },
+      {
+        "text": "Bihar",
+        "label": "GPE"
+      },
+      {
+        "text": "India",
+        "label": "GPE"
+      },
+      {
+        "text": "School of Artificial Intelligence and Data Science",
+        "label": "ORG"
+      },
+      {
+        "text": "Indian Institute of Technology Jodhpur",
+        "label": "ORG"
+      },
+      {
+        "text": "Rajasthan",
+        "label": "GPE"
+      },
+      {
+        "text": "CLIP",
+        "label": "ORG"
+      },
+      {
+        "text": "AUC-ROC",
+        "label": "ORG"
+      },
+      {
+        "text": "F1",
+        "label": "CARDINAL"
+      },
+      {
+        "text": "A B S T R A C T\n",
+        "label": "PRODUCT"
+      },
+      {
+        "text": "recent years",
+        "label": "DATE"
+      },
+      {
+        "text": "four",
+        "label": "CARDINAL"
+      },
+      {
+        "text": "meme",
+        "label": "ORG"
+      },
+      {
+        "text": "MTL",
+        "label": "ORG"
+      },
+      {
+        "text": "Contrastive Language Image Pretraining",
+        "label": "ORG"
+      },
+      {
+        "text": "UNiversal\nImage-TExt Representation Learning",
+        "label": "ORG"
+      },
+      {
+        "text": "BERT",
+        "label": "ORG"
+      },
+      {
+        "text": "1",
+        "label": "CARDINAL"
+      },
+      {
+        "text": "today",
+        "label": "DATE"
+      },
+      {
+        "text": "2018",
+        "label": "DATE"
+      },
+      {
+        "text": "180 million",
+        "label": "CARDINAL"
+      },
+      {
+        "text": "Zannettou et al.",
+        "label": "LOC"
+      },
+      {
+        "text": "Suryawanshi",
+        "label": "GPE"
+      },
+      {
+        "text": "al.",
+        "label": "GPE"
+      },
+      {
+        "text": "2020",
+        "label": "DATE"
+      }
+    ],
+    "relations": [],
+    "summary": "Here is a concise 3-5 sentence summary of the text: \nA recent study proposes a transformer-based multi-task learning approach to detect multimodal hate speech in online memes. The approach combines Contrastive Language Image Pretraining (CLIP), UNiversal Image-TExt Representation Learning (UNITER), and BERT to transfer common knowledge and train on four meme datasets simultaneously. This multi-task learning framework outperforms unimodal and multimodal approaches on four multilingual benchmark datasets, achieving high AUC-ROC, accuracy, and F1 scores. The study aims to address the growing issue of online hate speech and its potential to disrupt societal peace. By developing an effective multimodal hate speech detection system, the researchers contribute to mitigating the spread of harmful memes on social media.",
+    "metrics": {
+      "entity_count": 508,
+      "citation_count": 102,
+      "keyword_count": 15,
+      "section_count": 4,
+      "confidence_score": 100
+    },
+    "sections": [
+      {
+        "name": "A R T I C L E I N F O",
+        "present": true,
+        "ai_summary": "This section provides metadata about the article, such as keywords."
+      },
+      {
+        "name": "A B S T R A C T",
+        "present": true,
+        "ai_summary": "This section summarizes the article, highlighting the issue of online hate speech and the proposed solution using a multi-task learning approach."
+      },
+      {
+        "name": "1. Introduction",
+        "present": true,
+        "ai_summary": "This section introduces the topic of multimodal hate speech detection, highlighting the growing popularity of memes and their potential for harm."
+      },
+      {
+        "name": "1.1. Motivations",
+        "present": true,
+        "ai_summary": "This section discusses the motivations behind designing a multi-modal hate speech classifier, including the need for complete content understanding and rich contextual information."
+      }
+    ]
+  }
+]
