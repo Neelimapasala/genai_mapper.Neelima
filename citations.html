@@ -1,0 +1,946 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Citation Tracker — GenAI Knowledge Mapper</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/cytoscape@3.24.0/dist/cytoscape.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <style>
+    :root{
+      --bg:#080c18; --glass:rgba(15,20,40,0.75); --glass2:rgba(255,255,255,0.04);
+      --bd:rgba(255,255,255,0.09); --accent:#6366f1; --accent2:#8b5cf6;
+      --green:#10b981; --amber:#f59e0b; --rose:#f43f5e; --cyan:#06b6d4;
+      --t1:#f1f5f9; --t2:#94a3b8; --t3:#475569; --r:14px; --rl:18px;
+    }
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+    html{scroll-behavior:smooth;}
+    body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--t1);font-size:14px;line-height:1.6;overflow-x:hidden;-webkit-font-smoothing:antialiased;}
+    body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
+      background:radial-gradient(ellipse 75% 50% at 5% 0%,rgba(99,102,241,.16) 0%,transparent 60%),
+        radial-gradient(ellipse 55% 45% at 95% 5%,rgba(139,92,246,.12) 0%,transparent 55%),
+        radial-gradient(ellipse 60% 40% at 50% 100%,rgba(6,182,212,.08) 0%,transparent 55%);}
+    body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
+      background-image:linear-gradient(rgba(255,255,255,.012) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.012) 1px,transparent 1px);
+      background-size:48px 48px;}
+    ::-webkit-scrollbar{width:5px;}::-webkit-scrollbar-track{background:transparent;}
+    ::-webkit-scrollbar-thumb{background:rgba(255,255,255,.12);border-radius:3px;}
+    a{text-decoration:none;color:inherit;}
+
+    /* NAVBAR */
+    .topnav{position:sticky;top:0;z-index:300;background:rgba(8,12,24,.88);backdrop-filter:blur(20px);border-bottom:1px solid var(--bd);}
+    .tnav-inner{max-width:1400px;margin:0 auto;padding:0 28px;height:60px;display:flex;align-items:center;gap:20px;}
+    .brand{font-size:1rem;font-weight:800;letter-spacing:-.03em;color:var(--t1);text-decoration:none;display:flex;align-items:center;gap:8px;flex-shrink:0;}
+    .brand-mark{width:30px;height:30px;background:linear-gradient(135deg,var(--accent),var(--accent2));border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:.88rem;box-shadow:0 0 14px rgba(99,102,241,.45);}
+    .nav-links{display:flex;align-items:center;gap:2px;list-style:none;margin-left:10px;}
+    .nav-links a{padding:6px 12px;border-radius:8px;font-size:.82rem;font-weight:500;color:var(--t2);transition:all .2s;display:flex;align-items:center;gap:5px;}
+    .nav-links a:hover{color:var(--t1);background:var(--glass2);}
+    .nav-links a.active{color:var(--accent);background:rgba(99,102,241,.12);}
+    .nav-links .has-drop{position:relative;}
+    .drop-menu{position:absolute;top:calc(100% + 8px);left:0;background:#14141f;border:1px solid var(--bd);border-radius:var(--r);padding:6px;min-width:210px;display:none;box-shadow:0 24px 60px rgba(0,0,0,.6);z-index:400;}
+    .nav-links .has-drop:hover .drop-menu{display:block;}
+    .drop-menu a{display:flex;align-items:center;gap:8px;padding:8px 12px;border-radius:8px;font-size:.81rem;color:var(--t2);}
+    .drop-menu a:hover{color:var(--t1);background:rgba(255,255,255,.05);}
+    .drop-menu hr{border-color:var(--bd);margin:4px 0;}
+    .ml-auto{margin-left:auto;}
+    .btn-cta{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;border:none;padding:8px 18px;border-radius:50px;font-size:.8rem;font-weight:600;cursor:pointer;text-decoration:none;display:flex;align-items:center;gap:6px;transition:all .2s;box-shadow:0 0 18px rgba(99,102,241,.35);}
+    .btn-cta:hover{transform:translateY(-1px);box-shadow:0 4px 22px rgba(99,102,241,.55);color:#fff;}
+
+    /* PAGE NAV */
+    {% set current_page = 'citations' %}
+
+    /* PAGE */
+    .page{position:relative;z-index:1;max-width:1200px;margin:0 auto;padding:28px;display:flex;flex-direction:column;gap:22px;}
+
+    /* CARD */
+    .card{background:var(--glass);border:1px solid var(--bd);border-radius:var(--rl);backdrop-filter:blur(16px);box-shadow:0 8px 30px rgba(0,0,0,.5);overflow:hidden;transition:border-color .3s,box-shadow .3s;}
+    .card:hover{border-color:rgba(99,102,241,.2);}
+    .card-header{padding:16px 22px;border-bottom:1px solid var(--bd);display:flex;align-items:center;justify-content:space-between;background:rgba(255,255,255,.02);}
+    .card-title{font-size:.92rem;font-weight:700;color:var(--t1);display:flex;align-items:center;gap:10px;margin:0;}
+    .ti{width:32px;height:32px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:1rem;flex-shrink:0;}
+    .ti-indigo{background:linear-gradient(135deg,rgba(99,102,241,.3),rgba(139,92,246,.3));color:#a78bfa;}
+    .ti-green{background:linear-gradient(135deg,rgba(16,185,129,.25),rgba(5,150,105,.25));color:#34d399;}
+    .ti-amber{background:linear-gradient(135deg,rgba(245,158,11,.25),rgba(217,119,6,.25));color:#fbbf24;}
+    .ti-cyan{background:linear-gradient(135deg,rgba(6,182,212,.25),rgba(56,189,248,.25));color:#38bdf8;}
+    .ti-rose{background:linear-gradient(135deg,rgba(244,63,94,.25),rgba(220,38,38,.25));color:#fb7185;}
+    .card-tag{font-size:.6rem;font-weight:700;padding:3px 10px;border-radius:20px;text-transform:uppercase;letter-spacing:.1em;}
+    .tag-indigo{background:rgba(99,102,241,.15);color:#a78bfa;border:1px solid rgba(99,102,241,.3);}
+    .tag-green{background:rgba(16,185,129,.15);color:#34d399;border:1px solid rgba(16,185,129,.3);}
+    .tag-amber{background:rgba(245,158,11,.15);color:#fbbf24;border:1px solid rgba(245,158,11,.3);}
+    .tag-cyan{background:rgba(6,182,212,.15);color:#38bdf8;border:1px solid rgba(6,182,212,.3);}
+    .card-body{padding:22px;}
+
+    /* HERO */
+    .hero{background:linear-gradient(135deg,rgba(99,102,241,.18) 0%,rgba(139,92,246,.12) 50%,rgba(6,182,212,.07) 100%);border:1px solid rgba(99,102,241,.22);border-radius:var(--rl);padding:30px 28px;position:relative;overflow:hidden;}
+    .hero::before{content:'';position:absolute;top:-60px;right:-60px;width:240px;height:240px;background:radial-gradient(circle,rgba(99,102,241,.18) 0%,transparent 70%);pointer-events:none;}
+    .hero-badge{display:inline-flex;align-items:center;gap:6px;background:rgba(99,102,241,.15);border:1px solid rgba(99,102,241,.3);border-radius:20px;padding:4px 12px;font-size:.7rem;font-weight:700;color:#a78bfa;text-transform:uppercase;letter-spacing:.1em;margin-bottom:10px;}
+    .hero-badge::before{content:'';width:6px;height:6px;border-radius:50%;background:#a78bfa;animation:pdot 2s ease-in-out infinite;}
+    @keyframes pdot{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(.8)}}
+    .hero-top{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-wrap:wrap;}
+    .hero-title{font-size:1.8rem;font-weight:900;letter-spacing:-.04em;color:var(--t1);line-height:1.1;margin:0 0 8px;}
+    .hero-title span{background:linear-gradient(135deg,#a78bfa,#60a5fa);-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+    .hero-sub{font-size:.88rem;color:var(--t2);line-height:1.7;max-width:560px;margin:0 0 14px;}
+    .hero-actions{display:flex;gap:8px;flex-shrink:0;flex-wrap:wrap;}
+    .btn-ghost{background:var(--glass2);border:1px solid var(--bd);color:var(--t2);padding:7px 14px;border-radius:9px;font-size:.8rem;font-weight:600;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;gap:6px;transition:all .2s;}
+    .btn-ghost:hover{background:rgba(255,255,255,.07);border-color:rgba(255,255,255,.15);color:var(--t1);}
+    .stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:18px;}
+    .hstat{background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.06);border-radius:var(--r);padding:14px;display:flex;align-items:center;gap:10px;transition:all .2s;}
+    .hstat:hover{background:rgba(99,102,241,.09);border-color:rgba(99,102,241,.22);transform:translateY(-2px);}
+    .hstat-ico{width:34px;height:34px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:1rem;flex-shrink:0;}
+    .hstat-num{font-size:1.4rem;font-weight:800;letter-spacing:-.04em;line-height:1;}
+    .hstat-lbl{font-size:.62rem;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--t3);margin-top:2px;}
+
+    /* UPLOAD */
+    .upload-zone{border:2px dashed rgba(99,102,241,.3);border-radius:var(--r);background:rgba(99,102,241,.04);padding:32px 20px;text-align:center;cursor:pointer;transition:all .25s;margin-bottom:14px;}
+    .upload-zone:hover,.upload-zone.drag{border-color:rgba(99,102,241,.7);background:rgba(99,102,241,.08);}
+    .upload-zone.has-file{border-color:rgba(16,185,129,.5);background:rgba(16,185,129,.05);}
+    .upload-icon{font-size:2.2rem;display:block;margin-bottom:10px;color:var(--accent);}
+    .upload-title{font-weight:700;font-size:.92rem;color:var(--t1);margin-bottom:4px;}
+    .upload-desc{font-size:.78rem;color:var(--t2);margin-bottom:10px;}
+    .file-badges{display:flex;gap:6px;justify-content:center;}
+    .file-badge{background:rgba(99,102,241,.15);border:1px solid rgba(99,102,241,.25);color:#a78bfa;padding:2px 10px;border-radius:20px;font-size:.68rem;font-weight:700;}
+    .btn-primary{background:linear-gradient(135deg,var(--accent),var(--accent2));border:none;border-radius:var(--r);padding:12px 24px;font-size:.88rem;font-weight:700;color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:all .25s;box-shadow:0 4px 20px rgba(99,102,241,.4);width:100%;margin-top:12px;}
+    .btn-primary:hover{transform:translateY(-2px);box-shadow:0 8px 30px rgba(99,102,241,.55);}
+    .btn-primary:disabled{opacity:.6;cursor:not-allowed;transform:none;}
+    .info-tip{background:rgba(99,102,241,.07);border:1px solid rgba(99,102,241,.2);border-left:3px solid var(--accent);border-radius:var(--r);padding:12px 14px;font-size:.8rem;color:var(--t2);margin-top:14px;}
+    .info-tip strong{color:#a78bfa;}
+    code{background:rgba(255,255,255,.08);padding:1px 7px;border-radius:5px;font-family:'JetBrains Mono',monospace;font-size:.82em;color:#a78bfa;}
+
+    /* TABS */
+    .tab-nav{display:flex;gap:4px;padding:14px 22px 0;background:rgba(255,255,255,.015);border-bottom:1px solid var(--bd);overflow-x:auto;}
+    .tab-btn{padding:10px 14px;border-radius:10px 10px 0 0;cursor:pointer;font-weight:600;font-size:.8rem;background:transparent;border:none;color:var(--t3);transition:all .2s;display:flex;align-items:center;gap:6px;white-space:nowrap;border-bottom:2px solid transparent;outline:none;}
+    .tab-btn:hover{color:var(--t2);}
+    .tab-btn.active{color:#a78bfa;border-bottom-color:#a78bfa;background:rgba(99,102,241,.08);}
+    .tab-pane{display:none;padding:22px;}
+    .tab-pane.active{display:block;}
+    .tab-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px;}
+    .tab-hdr p{font-size:.8rem;color:var(--t3);margin:0;}
+    .btn-outline{background:transparent;border:1px solid var(--bd);border-radius:8px;padding:6px 14px;font-size:.78rem;font-weight:600;color:var(--t2);cursor:pointer;display:inline-flex;align-items:center;gap:5px;transition:all .2s;}
+    .btn-outline:hover{border-color:rgba(99,102,241,.4);color:#a78bfa;background:rgba(99,102,241,.06);}
+
+    /* TABLE */
+    .scroll-tbl{max-height:440px;overflow-y:auto;border:1px solid var(--bd);border-radius:var(--r);}
+    .data-tbl{width:100%;font-size:.83rem;border-collapse:collapse;}
+    .data-tbl thead th{background:rgba(255,255,255,.03);border-bottom:1px solid var(--bd);font-weight:700;color:var(--t3);padding:10px 14px;text-align:left;font-size:.7rem;text-transform:uppercase;letter-spacing:.08em;position:sticky;top:0;z-index:1;}
+    .data-tbl tbody td{padding:10px 14px;border-bottom:1px solid rgba(255,255,255,.035);color:var(--t2);}
+    .data-tbl tbody tr:hover td{background:rgba(255,255,255,.025);}
+    .data-tbl tbody tr:last-child td{border-bottom:none;}
+    .bdg{background:rgba(99,102,241,.15);color:#a78bfa;border:1px solid rgba(99,102,241,.28);padding:2px 9px;border-radius:20px;font-size:.72rem;font-weight:700;font-family:'JetBrains Mono',monospace;}
+    .bdg-gray{background:rgba(255,255,255,.07);color:var(--t2);border:1px solid var(--bd);padding:2px 8px;border-radius:6px;font-size:.68rem;font-weight:700;}
+    .row-num{color:var(--t3);font-family:'JetBrains Mono',monospace;font-size:.72rem;}
+    .search-box{background:rgba(255,255,255,.05);border:1px solid var(--bd);border-radius:8px;padding:6px 12px;font-size:.78rem;color:var(--t1);outline:none;width:180px;transition:border-color .2s;}
+    .search-box:focus{border-color:rgba(99,102,241,.5);}
+    .search-box::placeholder{color:var(--t3);}
+
+    /* COPY BUTTONS */
+    .copy-btn{font-size:.65rem;font-weight:700;padding:2px 8px;border-radius:20px;border:1px solid rgba(99,102,241,.25);background:rgba(99,102,241,.08);color:#a78bfa;cursor:pointer;transition:all .15s;display:inline-flex;align-items:center;gap:3px;margin:0 2px;}
+    .copy-btn:hover{background:rgba(99,102,241,.2);}
+    .copy-btn.ok{background:rgba(16,185,129,.15);border-color:rgba(16,185,129,.3);color:#34d399;}
+
+    /* AUTHORS */
+    .author-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:10px;}
+    .author-card{background:rgba(255,255,255,.04);border:1px solid var(--bd);border-radius:var(--r);padding:12px 14px;display:flex;align-items:center;gap:12px;transition:all .2s;}
+    .author-card:hover{background:rgba(99,102,241,.07);border-color:rgba(99,102,241,.25);}
+    .author-av{width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,rgba(99,102,241,.25),rgba(139,92,246,.25));border:1px solid rgba(99,102,241,.3);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:.78rem;color:#a78bfa;flex-shrink:0;}
+    .author-name{font-size:.82rem;font-weight:700;color:var(--t1);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+    .author-meta{font-size:.68rem;color:var(--t3);margin-top:2px;}
+    .author-cnt{margin-left:auto;flex-shrink:0;background:rgba(99,102,241,.18);color:#a78bfa;border:1px solid rgba(99,102,241,.3);border-radius:20px;padding:2px 9px;font-size:.68rem;font-weight:700;}
+
+    /* FORMAT TABS */
+    .fmt-tabs{display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap;}
+    .fmt-tab{font-size:.75rem;font-weight:700;padding:5px 14px;border-radius:20px;cursor:pointer;border:1px solid var(--bd);background:transparent;color:var(--t3);transition:all .18s;}
+    .fmt-tab:hover{color:var(--t2);}
+    .fmt-tab.active{background:rgba(99,102,241,.15);border-color:rgba(99,102,241,.35);color:#a78bfa;}
+    .ref-list{background:rgba(0,0,0,.2);border:1px solid var(--bd);border-radius:var(--r);padding:16px;max-height:440px;overflow-y:auto;font-family:'JetBrains Mono',monospace;font-size:.78rem;line-height:1.9;color:var(--t2);}
+    .ref-row{padding:8px 0;border-bottom:1px dashed rgba(255,255,255,.06);display:flex;align-items:flex-start;gap:10px;}
+    .ref-row:last-child{border-bottom:none;}
+    .ref-num{color:#a78bfa;font-weight:700;flex-shrink:0;min-width:22px;}
+    .ref-text{flex:1;line-height:1.7;}
+    .ref-copy{flex-shrink:0;font-size:.62rem;font-weight:700;padding:2px 8px;border-radius:20px;border:1px solid rgba(99,102,241,.25);background:rgba(99,102,241,.08);color:#a78bfa;cursor:pointer;transition:all .15s;}
+    .ref-copy:hover{background:rgba(99,102,241,.2);}
+    .ref-copy.ok{background:rgba(16,185,129,.15);border-color:rgba(16,185,129,.3);color:#34d399;}
+
+    /* GRAPH */
+    #citGraphContainer{width:100%;height:460px;border:1px solid var(--bd);border-radius:var(--r);background:rgba(0,0,0,.3);}
+
+    /* INSIGHTS */
+    .insight-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+    .insight-box{background:rgba(255,255,255,.03);border:1px solid var(--bd);border-radius:var(--r);padding:18px;}
+    .quality-bar-wrap{margin-top:10px;}
+    .quality-label{display:flex;justify-content:space-between;font-size:.74rem;color:var(--t2);margin-bottom:5px;}
+    .quality-bar{height:6px;background:rgba(255,255,255,.06);border-radius:3px;overflow:hidden;}
+    .quality-fill{height:100%;border-radius:3px;}
+
+    /* GAPS */
+    .gap-item{display:flex;align-items:flex-start;gap:10px;padding:11px 13px;background:rgba(245,158,11,.06);border:1px solid rgba(245,158,11,.18);border-radius:var(--r);margin-bottom:8px;}
+    .gap-item:last-child{margin-bottom:0;}
+    .gap-icon{color:#fbbf24;font-size:.9rem;flex-shrink:0;margin-top:2px;}
+    .gap-text{font-size:.81rem;color:var(--t2);line-height:1.65;}
+
+    /* TIMELINE */
+    .chart-wrap{position:relative;height:200px;}
+    .decade-grid{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px;}
+    .decade-card{background:rgba(255,255,255,.03);border:1px solid var(--bd);border-radius:var(--r);padding:10px 14px;min-width:90px;}
+    .decade-num{font-size:1.3rem;font-weight:800;color:var(--t1);line-height:1;}
+    .decade-lbl{font-size:.68rem;color:var(--t3);margin:2px 0 6px;}
+    .decade-bar{height:4px;background:rgba(255,255,255,.06);border-radius:2px;overflow:hidden;}
+    .decade-fill{height:100%;background:linear-gradient(90deg,#6366f1,#8b5cf6);border-radius:2px;}
+
+    /* EXPORT */
+    .dl-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:10px;}
+    .dl-btn{background:rgba(255,255,255,.04);border:1px solid var(--bd);border-radius:var(--r);padding:16px 12px;display:flex;flex-direction:column;align-items:center;gap:7px;cursor:pointer;transition:all .2s;color:var(--t2);text-align:center;}
+    .dl-btn:hover{transform:translateY(-2px);}
+    .dl-btn i{font-size:1.5rem;}
+    .dl-label{font-size:.78rem;font-weight:700;color:var(--t1);}
+    .dl-sub{font-size:.66rem;color:var(--t3);}
+    .dl-csv{border-color:rgba(16,185,129,.25);} .dl-csv:hover{background:rgba(16,185,129,.08);border-color:rgba(16,185,129,.5);} .dl-csv i{color:#34d399;}
+    .dl-indigo{border-color:rgba(99,102,241,.25);} .dl-indigo:hover{background:rgba(99,102,241,.08);border-color:rgba(99,102,241,.5);} .dl-indigo i{color:#a78bfa;}
+    .dl-cyan{border-color:rgba(6,182,212,.25);} .dl-cyan:hover{background:rgba(6,182,212,.08);border-color:rgba(6,182,212,.5);} .dl-cyan i{color:#38bdf8;}
+    .dl-amber{border-color:rgba(245,158,11,.25);} .dl-amber:hover{background:rgba(245,158,11,.08);border-color:rgba(245,158,11,.5);} .dl-amber i{color:#fbbf24;}
+
+    /* EMPTY */
+    .empty-state{text-align:center;padding:52px 24px;display:flex;flex-direction:column;align-items:center;gap:12px;}
+    .empty-ico{width:68px;height:68px;background:rgba(99,102,241,.09);border:1px solid rgba(99,102,241,.2);border-radius:18px;display:flex;align-items:center;justify-content:center;font-size:2rem;color:rgba(99,102,241,.5);}
+    .empty-state h3{font-size:1rem;font-weight:700;color:var(--t1);margin:0;}
+    .empty-state p{font-size:.85rem;color:var(--t2);max-width:380px;margin:0;line-height:1.65;}
+
+    /* NEXT STEPS */
+    .ns-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;}
+    .ns-card{background:rgba(255,255,255,.04);border:1px solid var(--bd);border-radius:var(--r);padding:16px;text-decoration:none;display:flex;align-items:center;gap:12px;transition:all .2s;}
+    .ns-card:hover{background:rgba(99,102,241,.07);border-color:rgba(99,102,241,.25);transform:translateY(-2px);}
+    .ns-icon{font-size:1.4rem;flex-shrink:0;}
+    .ns-label{font-size:.82rem;font-weight:700;color:var(--t1);}
+    .ns-desc{font-size:.7rem;color:var(--t3);margin-top:1px;}
+
+    /* TOAST */
+    #toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(12px);background:rgba(16,185,129,.14);border:1px solid rgba(16,185,129,.32);color:#6ee7b7;padding:9px 18px;border-radius:var(--r);font-size:.8rem;font-weight:600;opacity:0;pointer-events:none;transition:all .28s;z-index:9997;display:flex;align-items:center;gap:7px;backdrop-filter:blur(12px);white-space:nowrap;}
+    #toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+
+    /* CITEBOT FAB */
+    #citebot-fab{position:fixed;bottom:28px;right:28px;z-index:9000;width:58px;height:58px;border-radius:50%;background:linear-gradient(135deg,#6366f1,#8b5cf6);border:none;cursor:pointer;box-shadow:0 4px 24px rgba(99,102,241,.55);display:flex;align-items:center;justify-content:center;font-size:1.4rem;transition:transform .2s,box-shadow .2s;}
+    #citebot-fab:hover{transform:scale(1.1);box-shadow:0 8px 32px rgba(99,102,241,.7);}
+    #citebot-fab .fab-badge{position:absolute;top:-4px;right:-4px;background:#10b981;border-radius:50%;width:19px;height:19px;font-size:.56rem;font-weight:800;color:#fff;display:flex;align-items:center;justify-content:center;border:2px solid #080c18;animation:cbp 2s ease-in-out infinite;}
+    @keyframes cbp{0%,100%{transform:scale(1)}50%{transform:scale(1.2)}}
+
+    /* CITEBOT WINDOW */
+    #citebot-window{position:fixed;bottom:100px;right:28px;z-index:9001;width:390px;max-width:calc(100vw - 40px);background:rgba(10,14,30,.97);border:1px solid rgba(99,102,241,.3);border-radius:20px;box-shadow:0 24px 64px rgba(0,0,0,.7);display:none;flex-direction:column;overflow:hidden;backdrop-filter:blur(20px);}
+    #citebot-window.open{display:flex;}
+    .cb-head{background:linear-gradient(135deg,rgba(99,102,241,.25),rgba(139,92,246,.18));padding:14px 18px;display:flex;align-items:center;gap:12px;border-bottom:1px solid rgba(99,102,241,.2);}
+    .cb-avatar{width:40px;height:40px;border-radius:12px;background:linear-gradient(135deg,#6366f1,#8b5cf6);display:flex;align-items:center;justify-content:center;font-size:1.15rem;flex-shrink:0;box-shadow:0 0 14px rgba(99,102,241,.4);}
+    .cb-name{font-size:.92rem;font-weight:800;color:#f1f5f9;letter-spacing:-.02em;}
+    .cb-status{font-size:.7rem;color:#a78bfa;display:flex;align-items:center;gap:5px;}
+    .cb-status::before{content:'';width:6px;height:6px;border-radius:50%;background:#34d399;display:inline-block;animation:cbp 2s ease-in-out infinite;}
+    .cb-close-btn{background:rgba(255,255,255,.06);border:none;border-radius:8px;width:30px;height:30px;cursor:pointer;color:#94a3b8;font-size:1rem;display:flex;align-items:center;justify-content:center;transition:all .2s;margin-left:auto;}
+    .cb-close-btn:hover{background:rgba(244,63,94,.15);color:#fb7185;}
+    .cb-messages{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:10px;min-height:280px;max-height:340px;scrollbar-width:thin;scrollbar-color:rgba(99,102,241,.3) transparent;}
+    .cb-msg{max-width:88%;font-size:.82rem;line-height:1.6;padding:10px 13px;border-radius:14px;word-break:break-word;}
+    .cb-msg.bot{background:rgba(99,102,241,.1);border:1px solid rgba(99,102,241,.18);color:#e2e8f0;align-self:flex-start;border-bottom-left-radius:4px;}
+    .cb-msg.user{background:linear-gradient(135deg,rgba(99,102,241,.35),rgba(139,92,246,.3));border:1px solid rgba(99,102,241,.35);color:#f1f5f9;align-self:flex-end;border-bottom-right-radius:4px;}
+    .cb-typing{display:flex;gap:4px;align-items:center;padding:10px 13px;background:rgba(99,102,241,.08);border:1px solid rgba(99,102,241,.15);border-radius:14px;border-bottom-left-radius:4px;align-self:flex-start;}
+    .cb-typing span{width:6px;height:6px;border-radius:50%;background:#a78bfa;animation:cb-b .9s ease-in-out infinite;}
+    .cb-typing span:nth-child(2){animation-delay:.15s;}
+    .cb-typing span:nth-child(3){animation-delay:.3s;}
+    @keyframes cb-b{0%,80%,100%{transform:translateY(0)}40%{transform:translateY(-6px)}}
+    .cb-chips{padding:8px 12px 6px;display:flex;gap:6px;flex-wrap:wrap;border-top:1px solid rgba(99,102,241,.15);}
+    .cb-chip{background:rgba(99,102,241,.1);border:1px solid rgba(99,102,241,.25);border-radius:20px;padding:5px 12px;font-size:.72rem;font-weight:600;color:#a78bfa;cursor:pointer;transition:all .2s;white-space:nowrap;}
+    .cb-chip:hover{background:rgba(99,102,241,.22);color:#c4b5fd;}
+    .cb-footer{padding:12px 14px;border-top:1px solid rgba(99,102,241,.15);display:flex;gap:8px;background:rgba(0,0,0,.2);}
+    .cb-input{flex:1;background:rgba(255,255,255,.05);border:1px solid rgba(99,102,241,.25);border-radius:12px;padding:9px 13px;font-size:.82rem;color:#f1f5f9;font-family:'Inter',sans-serif;outline:none;transition:border-color .2s;}
+    .cb-input:focus{border-color:rgba(99,102,241,.6);box-shadow:0 0 0 3px rgba(99,102,241,.1);}
+    .cb-input::placeholder{color:#475569;}
+    .cb-send{background:linear-gradient(135deg,#6366f1,#8b5cf6);border:none;border-radius:10px;width:38px;height:38px;cursor:pointer;color:#fff;font-size:.9rem;display:flex;align-items:center;justify-content:center;transition:all .2s;flex-shrink:0;}
+    .cb-send:hover{transform:scale(1.08);box-shadow:0 4px 14px rgba(99,102,241,.5);}
+    .cb-send:disabled{opacity:.5;cursor:not-allowed;transform:none;}
+
+    @media(max-width:900px){.stats-row,.ns-grid{grid-template-columns:repeat(2,1fr);}.insight-grid{grid-template-columns:1fr;}}
+    @media(max-width:600px){.page{padding:14px;}.hero{padding:20px 16px;}.hero-title{font-size:1.4rem;}.hero-actions{display:none;}.stats-row,.ns-grid{grid-template-columns:1fr;}}
+  </style>
+</head>
+<body>
+
+<!-- NAVBAR -->
+<div class="topnav">
+  <div class="tnav-inner">
+    <a href="/" class="brand"><div class="brand-mark">🧠</div>GenAI<span style="color:var(--accent);">.</span>Mapper</a>
+    <ul class="nav-links">
+      <li><a href="/"><i class="bi bi-house-fill"></i> Home</a></li>
+      <li><a href="/map"><i class="bi bi-diagram-2-fill"></i> Map</a></li>
+      <li><a href="/dashboard"><i class="bi bi-speedometer2"></i> Dashboard</a></li>
+      <li class="has-drop">
+        <a href="#"><i class="bi bi-journals"></i> Research <i class="bi bi-chevron-down" style="font-size:.65rem;"></i></a>
+        <div class="drop-menu">
+          <a href="/research"><i class="bi bi-file-earmark-text-fill"></i> Paper Analyzer</a>
+          <a href="/benchmark"><i class="bi bi-trophy-fill"></i> Model Benchmark</a>
+          <a href="/datasets"><i class="bi bi-database-fill"></i> Dataset Explorer</a>
+          <a href="/citations"><i class="bi bi-journal-bookmark-fill"></i> Citation Tracker</a>
+          <hr>
+          <a href="/gap-finder"><i class="bi bi-binoculars-fill"></i> Gap Finder</a>
+          <a href="/literature"><i class="bi bi-file-earmark-richtext-fill"></i> Literature Review</a>
+        </div>
+      </li>
+      <li><a href="/citations" class="active"><i class="bi bi-journal-bookmark-fill"></i> Citations</a></li>
+      <li><a href="/about"><i class="bi bi-info-circle-fill"></i> About</a></li>
+      <li><a href="/contact"><i class="bi bi-envelope-fill"></i> Contact</a></li>
+    </ul>
+    <div class="ml-auto"><a href="/login" class="btn-cta"><i class="bi bi-box-arrow-in-right"></i> Login</a></div>
+  </div>
+</div>
+
+{% set current_page = 'citations' %}
+{% include 'page_nav.html' %}
+
+<div class="page">
+
+  <!-- HERO -->
+  <div class="hero">
+    <div class="hero-top">
+      <div>
+        <div class="hero-badge"><i class="bi bi-journal-bookmark-fill"></i> Citation Tracker</div>
+        <h1 class="hero-title">Map Your <span>Citation Network</span></h1>
+        <p class="hero-sub">Upload any research paper — extract all references, visualise the network, analyse author frequency, detect gaps, and export in APA, MLA, Chicago, IEEE formats.</p>
+      </div>
+      <div class="hero-actions">
+        <a href="/research" class="btn-ghost"><i class="bi bi-file-earmark-text-fill"></i> Paper Analyzer</a>
+        <a href="/literature" class="btn-ghost"><i class="bi bi-file-earmark-richtext-fill"></i> Lit Review</a>
+        <a href="/gap-finder" class="btn-ghost"><i class="bi bi-binoculars-fill"></i> Gap Finder</a>
+      </div>
+    </div>
+    {% if citations_found %}
+    <div class="stats-row">
+      <div class="hstat"><div class="hstat-ico ti-indigo"><i class="bi bi-journals"></i></div>
+        <div><div class="hstat-num" style="color:#a78bfa;">{{ citations.total_count }}</div><div class="hstat-lbl">Total Citations</div></div></div>
+      <div class="hstat"><div class="hstat-ico ti-green"><i class="bi bi-people-fill"></i></div>
+        <div><div class="hstat-num" style="color:#34d399;">{{ citations.unique_authors }}</div><div class="hstat-lbl">Unique Authors</div></div></div>
+      <div class="hstat"><div class="hstat-ico ti-cyan"><i class="bi bi-calendar-range"></i></div>
+        <div><div class="hstat-num" style="color:#38bdf8;font-size:1.1rem;">{{ citations.year_range }}</div><div class="hstat-lbl">Year Range</div></div></div>
+      <div class="hstat"><div class="hstat-ico ti-amber"><i class="bi bi-bar-chart-fill"></i></div>
+        <div><div class="hstat-num" style="color:#fbbf24;">{{ citations.avg_year }}</div><div class="hstat-lbl">Average Year</div></div></div>
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- UPLOAD -->
+  <div class="card">
+    <div class="card-header">
+      <h3 class="card-title"><div class="ti ti-indigo"><i class="bi bi-cloud-arrow-up-fill"></i></div>Upload Research Paper</h3>
+      <span class="card-tag tag-indigo">Step 1</span>
+    </div>
+    <div class="card-body">
+      <form method="POST" enctype="multipart/form-data" id="citForm">
+        <div class="upload-zone {% if citations_found %}has-file{% endif %}" id="uploadZone" onclick="document.getElementById('fileInput').click()">
+          {% if citations_found %}
+            <i class="bi bi-check-circle-fill upload-icon" style="color:#34d399;"></i>
+            <div class="upload-title" style="color:#34d399;">{{ citations.total_count }} citations extracted</div>
+            <p class="upload-desc">Click to upload another paper</p>
+          {% else %}
+            <i class="bi bi-journal-bookmark upload-icon"></i>
+            <div class="upload-title">Drop your research paper here</div>
+            <p class="upload-desc">Detects <code>[Author, Year]</code> · <code>(Author Year)</code> · <code>(Author and Author, Year)</code></p>
+            <div class="file-badges"><span class="file-badge">PDF</span><span class="file-badge">DOCX</span><span class="file-badge">TXT</span></div>
+          {% endif %}
+        </div>
+        <input type="file" id="fileInput" name="paper_file" accept=".pdf,.docx,.txt" style="display:none;">
+        <button type="submit" class="btn-primary" id="extractBtn"><i class="bi bi-search"></i> Extract All Citations</button>
+      </form>
+      <div class="info-tip">
+        <strong><i class="bi bi-lightbulb-fill"></i> Researcher tip:</strong>
+        Works best with standard in-text citation formats. After extraction use the <strong>Formats</strong> tab to copy any reference in APA, MLA, Chicago, or IEEE with one click.
+      </div>
+    </div>
+  </div>
+
+  {% if citations_found %}
+
+  <!-- ANALYSIS TABS -->
+  <div class="card">
+    <div class="card-header">
+      <h3 class="card-title"><div class="ti ti-indigo"><i class="bi bi-table"></i></div>Citation Analysis</h3>
+      <span class="card-tag tag-indigo">{{ citations.total_count }} references</span>
+    </div>
+    <div class="tab-nav" id="citTabNav">
+      <button class="tab-btn active" onclick="switchTab('tab-list',this)"><i class="bi bi-list-ul"></i> Reference List</button>
+      <button class="tab-btn" onclick="switchTab('tab-authors',this)"><i class="bi bi-people-fill"></i> Top Authors</button>
+      <button class="tab-btn" onclick="switchTab('tab-formats',this)"><i class="bi bi-file-text-fill"></i> Formats</button>
+      <button class="tab-btn" onclick="switchTab('tab-timeline',this);initTimeline()"><i class="bi bi-bar-chart-line-fill"></i> Timeline</button>
+      <button class="tab-btn" onclick="switchTab('tab-insights',this)"><i class="bi bi-lightbulb-fill"></i> Insights</button>
+      <button class="tab-btn" onclick="switchTab('tab-gaps',this)"><i class="bi bi-exclamation-triangle-fill"></i> Gap Check</button>
+      <button class="tab-btn" onclick="switchTab('tab-graph',this);initGraph()"><i class="bi bi-diagram-2-fill"></i> Network</button>
+    </div>
+
+    <!-- TAB: Reference List -->
+    <div class="tab-pane active" id="tab-list">
+      <div class="tab-hdr">
+        <p><i class="bi bi-info-circle"></i> Click APA / MLA / IEEE to copy any citation instantly</p>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <input class="search-box" id="searchBox" placeholder="Search author or year…" oninput="filterTable()">
+          <button class="btn-outline" onclick="downloadCSV()"><i class="bi bi-download"></i> CSV</button>
+        </div>
+      </div>
+      <div class="scroll-tbl">
+        <table class="data-tbl">
+          <thead><tr>
+            <th>#</th><th>Author(s)</th><th>Year</th><th>Type</th><th>Quick Copy</th>
+          </tr></thead>
+          <tbody id="citBody">
+            {% for c in citations.list %}
+            <tr data-a="{{ c.authors|lower }}" data-y="{{ c.year }}">
+              <td class="row-num">{{ loop.index }}</td>
+              <td style="font-weight:600;color:var(--t1);">{{ c.authors }}</td>
+              <td><span class="bdg">{{ c.year }}</span></td>
+              <td><span class="bdg-gray">{{ c.type or 'Journal' }}</span></td>
+              <td>
+                <button class="copy-btn" onclick="quickCopy('apa','{{ c.authors|replace("'","\\'") }}',{{ c.year }},this)">APA</button>
+                <button class="copy-btn" onclick="quickCopy('mla','{{ c.authors|replace("'","\\'") }}',{{ c.year }},this)">MLA</button>
+                <button class="copy-btn" onclick="quickCopy('ieee','{{ c.authors|replace("'","\\'") }}',{{ c.year }},this)">IEEE</button>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- TAB: Top Authors -->
+    <div class="tab-pane" id="tab-authors">
+      <div class="tab-hdr"><p><i class="bi bi-info-circle"></i> Most frequently cited authors — key voices in this research area</p></div>
+      {% if citations.top_authors %}
+      <div class="author-grid">
+        {% for a in citations.top_authors %}
+        <div class="author-card">
+          <div class="author-av">{{ a.name[:2]|upper }}</div>
+          <div style="min-width:0;"><div class="author-name">{{ a.name }}</div><div class="author-meta">Last cited: {{ a.recent_year }}</div></div>
+          <span class="author-cnt">{{ a.count }}×</span>
+        </div>
+        {% endfor %}
+      </div>
+      {% else %}<p style="color:var(--t3);font-size:.85rem;">No author data available.</p>{% endif %}
+    </div>
+
+    <!-- TAB: Formats -->
+    <div class="tab-pane" id="tab-formats">
+      <div class="tab-hdr">
+        <p><i class="bi bi-info-circle"></i> All {{ citations.total_count }} references — click Copy on any entry</p>
+        <button class="btn-outline" onclick="downloadFormatted()"><i class="bi bi-download"></i> Download .txt</button>
+      </div>
+      <div class="fmt-tabs" id="fmtTabs">
+        <button class="fmt-tab active" onclick="setFmt('apa',this)">APA 7th</button>
+        <button class="fmt-tab" onclick="setFmt('mla',this)">MLA 9th</button>
+        <button class="fmt-tab" onclick="setFmt('chicago',this)">Chicago</button>
+        <button class="fmt-tab" onclick="setFmt('ieee',this)">IEEE</button>
+        <button class="fmt-tab" onclick="setFmt('harvard',this)">Harvard</button>
+        <button class="fmt-tab" onclick="setFmt('vancouver',this)">Vancouver</button>
+      </div>
+      <div class="ref-list" id="refList"></div>
+    </div>
+
+    <!-- TAB: Timeline -->
+    <div class="tab-pane" id="tab-timeline">
+      <div class="tab-hdr"><p><i class="bi bi-info-circle"></i> Publication year distribution of your citations</p></div>
+      <div class="chart-wrap"><canvas id="timelineChart"></canvas></div>
+      <div class="decade-grid" id="decadeGrid" style="margin-top:16px;"></div>
+    </div>
+
+    <!-- TAB: Insights -->
+    <div class="tab-pane" id="tab-insights">
+      <div class="tab-hdr"><p><i class="bi bi-info-circle"></i> Automated quality analysis of your reference list</p></div>
+      <div class="insight-grid" id="insightGrid"></div>
+    </div>
+
+    <!-- TAB: Gap Check -->
+    <div class="tab-pane" id="tab-gaps">
+      <div class="tab-hdr"><p><i class="bi bi-info-circle"></i> Potential issues and recommendations for your reference list</p></div>
+      <div id="gapList"></div>
+    </div>
+
+    <!-- TAB: Network -->
+    <div class="tab-pane" id="tab-graph">
+      <p style="font-size:.8rem;color:var(--t3);margin-bottom:14px;"><i class="bi bi-info-circle"></i> Each node = a cited paper · Drag to rearrange · Scroll to zoom</p>
+      <div id="citGraphContainer"></div>
+    </div>
+  </div>
+
+  <!-- EXPORT -->
+  <div class="card">
+    <div class="card-header">
+      <h3 class="card-title"><div class="ti ti-green"><i class="bi bi-download"></i></div>Export Reference List</h3>
+      <span class="card-tag tag-green">Step 2</span>
+    </div>
+    <div class="card-body">
+      <div class="dl-grid">
+        <button class="dl-btn dl-csv" onclick="downloadCSV()">
+          <i class="bi bi-filetype-csv"></i><span class="dl-label">CSV</span><span class="dl-sub">All {{ citations.total_count }} · Excel</span>
+        </button>
+        <button class="dl-btn dl-indigo" onclick="downloadFmt('apa')">
+          <i class="bi bi-file-text-fill"></i><span class="dl-label">APA .txt</span><span class="dl-sub">7th Edition</span>
+        </button>
+        <button class="dl-btn dl-cyan" onclick="downloadFmt('mla')">
+          <i class="bi bi-file-earmark-text-fill"></i><span class="dl-label">MLA .txt</span><span class="dl-sub">9th Edition</span>
+        </button>
+        <button class="dl-btn dl-amber" onclick="downloadFmt('ieee')">
+          <i class="bi bi-file-earmark-code-fill"></i><span class="dl-label">IEEE .txt</span><span class="dl-sub">Numbered</span>
+        </button>
+        <button class="dl-btn" style="border-color:rgba(244,63,94,.25);" onclick="downloadFmt('chicago')">
+          <i class="bi bi-book-fill" style="color:#fb7185;"></i><span class="dl-label">Chicago .txt</span><span class="dl-sub">17th Edition</span>
+        </button>
+        <button class="dl-btn dl-csv" onclick="downloadJSON()">
+          <i class="bi bi-filetype-json" style="color:#34d399;"></i><span class="dl-label">JSON</span><span class="dl-sub">Raw objects</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  {% else %}
+
+  <div class="card">
+    <div class="card-body">
+      <div class="empty-state">
+        <div class="empty-ico"><i class="bi bi-journal-bookmark"></i></div>
+        <h3>No Citations Extracted Yet</h3>
+        <p>Upload a research paper above to automatically extract all references, map the citation network, and export in any academic format.</p>
+        <div class="info-tip" style="text-align:left;max-width:420px;margin-top:8px;">
+          <strong>Supported patterns:</strong><br>
+          <code>[Smith, 2021]</code> · <code>(Smith 2021)</code> · <code>(Smith and Jones, 2022)</code>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  {% endif %}
+
+  <!-- NEXT STEPS -->
+  <div class="card">
+    <div class="card-header"><h3 class="card-title"><div class="ti ti-indigo"><i class="bi bi-arrow-right-circle-fill"></i></div>Continue Your Research</h3></div>
+    <div class="card-body">
+      <div class="ns-grid">
+        <a href="/research" class="ns-card"><span class="ns-icon">📄</span><div><div class="ns-label">Paper Analyzer</div><div class="ns-desc">Deep 7-section NLP analysis</div></div></a>
+        <a href="/literature" class="ns-card"><span class="ns-icon">📚</span><div><div class="ns-label">Literature Review</div><div class="ns-desc">AI-generated structured review</div></div></a>
+        <a href="/gap-finder" class="ns-card"><span class="ns-icon">🔍</span><div><div class="ns-label">Gap Finder</div><div class="ns-desc">Discover under-researched topics</div></div></a>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /page -->
+
+<div id="toast"><i class="bi bi-check-circle-fill"></i> Copied to clipboard!</div>
+
+<!-- CITEBOT -->
+<button id="citebot-fab" onclick="toggleBot()" title="Ask CiteBot">📚<span class="fab-badge">AI</span></button>
+<div id="citebot-window">
+  <div class="cb-head">
+    <div class="cb-avatar">📚</div>
+    <div style="flex:1;">
+      <div class="cb-name">CiteBot</div>
+      <div class="cb-status">Citation AI Assistant</div>
+    </div>
+    <button class="cb-close-btn" onclick="toggleBot()"><i class="bi bi-x-lg"></i></button>
+  </div>
+  <div class="cb-messages" id="cbMsgs">
+    <div class="cb-msg bot">👋 Hi! I'm <strong>CiteBot</strong> — your AI assistant for academic citations.<br><br>I can help with APA, MLA, Chicago, IEEE formats, interpret the network graph, fix incomplete references, or answer any research question.</div>
+  </div>
+  <div class="cb-chips" id="cbChips">
+    <span class="cb-chip" onclick="cbChip('APA vs MLA — what is the difference?')">APA vs MLA</span>
+    <span class="cb-chip" onclick="cbChip('How do I cite a website in APA?')">Cite website</span>
+    <span class="cb-chip" onclick="cbChip('What is a DOI and how do I use it?')">What is DOI?</span>
+    <span class="cb-chip" onclick="cbChip('How can I fix an incomplete citation?')">Fix citation</span>
+  </div>
+  <div class="cb-footer">
+    <input class="cb-input" id="cbInput" placeholder="Ask about citations, formats, references…" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendBot();}">
+    <button class="cb-send" id="cbSend" onclick="sendBot()"><i class="bi bi-send-fill"></i></button>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+/* ═══════════════════════════════════════════════
+   ALL DATA FROM FLASK
+═══════════════════════════════════════════════ */
+const CITES  = {{ citations.list | tojson if citations_found else '[]' }};
+const GRAPH  = {{ citation_graph_data | safe }};
+
+/* ═══════════════════════════════════════════════
+   UPLOAD
+═══════════════════════════════════════════════ */
+(function(){
+  const uz = document.getElementById('uploadZone');
+  const fi = document.getElementById('fileInput');
+  if (!uz) return;
+  uz.addEventListener('dragover',  e => { e.preventDefault(); uz.classList.add('drag'); });
+  uz.addEventListener('dragleave', () => uz.classList.remove('drag'));
+  uz.addEventListener('drop', e => {
+    e.preventDefault(); uz.classList.remove('drag');
+    const f = e.dataTransfer.files[0];
+    if (f) { fi.files = e.dataTransfer.files; markReady(f.name); }
+  });
+  fi.addEventListener('change', e => { if (e.target.files[0]) markReady(e.target.files[0].name); });
+  function markReady(n) {
+    uz.innerHTML = `<i class="bi bi-check-circle-fill upload-icon" style="color:#34d399;"></i>
+      <div class="upload-title" style="color:#34d399;">${n}</div>
+      <p class="upload-desc">Ready — click <strong>Extract All Citations</strong></p>`;
+    uz.classList.add('has-file');
+  }
+  const f = document.getElementById('citForm');
+  if (f) f.addEventListener('submit', () => {
+    const b = document.getElementById('extractBtn');
+    b.innerHTML = '<i class="bi bi-hourglass-split"></i> Extracting…'; b.disabled = true;
+  });
+})();
+
+/* ═══════════════════════════════════════════════
+   TABS
+═══════════════════════════════════════════════ */
+function switchTab(id, btn) {
+  document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('#citTabNav .tab-btn').forEach(b => b.classList.remove('active'));
+  const t = document.getElementById(id); if (t) t.classList.add('active');
+  if (btn) btn.classList.add('active');
+}
+
+/* ═══════════════════════════════════════════════
+   SEARCH FILTER
+═══════════════════════════════════════════════ */
+function filterTable() {
+  const q = (document.getElementById('searchBox').value || '').toLowerCase();
+  document.querySelectorAll('#citBody tr').forEach(row => {
+    const a = (row.dataset.a || ''), y = (row.dataset.y || '');
+    row.style.display = (!q || a.includes(q) || y.includes(q)) ? '' : 'none';
+  });
+}
+
+/* ═══════════════════════════════════════════════
+   CITATION FORMATTERS
+═══════════════════════════════════════════════ */
+function fmt(style, author, year) {
+  const a = author, y = year, t = 'Research Paper by ' + a, j = 'Academic Journal';
+  switch (style) {
+    case 'apa':      return a + '. (' + y + '). ' + t + '. ' + j + '.';
+    case 'mla':      return a + '. "' + t + '." ' + j + ', ' + y + '.';
+    case 'chicago':  return a + '. "' + t + '." ' + j + ' (' + y + ').';
+    case 'ieee':     return a + ', "' + t + '," ' + j + ', ' + y + '.';
+    case 'harvard':  return a + ' (' + y + ') \'' + t + '\', ' + j + '.';
+    case 'vancouver':return a + '. ' + t + '. ' + j + '. ' + y + '.';
+    default:         return a + '. (' + y + '). ' + t + '.';
+  }
+}
+
+/* ═══════════════════════════════════════════════
+   QUICK COPY (table buttons)
+═══════════════════════════════════════════════ */
+function quickCopy(style, author, year, btn) {
+  const text = fmt(style, author, year);
+  navigator.clipboard.writeText(text).then(() => {
+    const orig = btn.textContent;
+    btn.textContent = '✓'; btn.classList.add('ok');
+    showToast();
+    setTimeout(() => { btn.textContent = orig; btn.classList.remove('ok'); }, 1800);
+  }).catch(() => { prompt('Copy this citation:', text); });
+}
+
+/* ═══════════════════════════════════════════════
+   FORMAT TAB
+═══════════════════════════════════════════════ */
+let currentFmt = 'apa';
+
+function setFmt(style, btn) {
+  currentFmt = style;
+  document.querySelectorAll('.fmt-tab').forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+  renderRefList();
+}
+
+function renderRefList() {
+  const el = document.getElementById('refList');
+  if (!el) return;
+  if (!CITES.length) { el.innerHTML = '<div style="color:var(--t3);font-size:.82rem;">No citations available.</div>'; return; }
+  el.innerHTML = CITES.map((c, i) => {
+    const text = fmt(currentFmt, c.authors, c.year);
+    return '<div class="ref-row">' +
+      '<span class="ref-num">' + (i+1) + '.</span>' +
+      '<span class="ref-text">' + esc(text) + '</span>' +
+      '<button class="ref-copy" onclick="copyRef(\'' + esc2(text) + '\',this)">Copy</button>' +
+      '</div>';
+  }).join('');
+}
+
+function copyRef(text, btn) {
+  navigator.clipboard.writeText(text).then(() => {
+    btn.textContent = '✓'; btn.classList.add('ok');
+    showToast();
+    setTimeout(() => { btn.textContent = 'Copy'; btn.classList.remove('ok'); }, 1800);
+  });
+}
+
+if (CITES.length) renderRefList();
+
+/* ═══════════════════════════════════════════════
+   TIMELINE CHART
+═══════════════════════════════════════════════ */
+let tlChart = null;
+function initTimeline() {
+  if (tlChart || !CITES.length) return;
+  const yc = {};
+  CITES.forEach(c => { yc[c.year] = (yc[c.year] || 0) + 1; });
+  const years = Object.keys(yc).map(Number).sort((a,b) => a-b);
+  const ctx = document.getElementById('timelineChart');
+  if (!ctx) return;
+  tlChart = new Chart(ctx, {
+    type: 'bar',
+    data: { labels: years, datasets: [{ label: 'Citations', data: years.map(y => yc[y]),
+      backgroundColor: 'rgba(99,102,241,.6)', borderColor: '#6366f1',
+      borderWidth: 1, borderRadius: 4, borderSkipped: false }] },
+    options: { responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { ticks: { color: '#475569', maxRotation: 45 }, grid: { color: 'rgba(255,255,255,.04)' } },
+        y: { beginAtZero: true, ticks: { color: '#475569', stepSize: 1 }, grid: { color: 'rgba(255,255,255,.06)' } }
+      }}
+  });
+  // Decades
+  const dc = {};
+  CITES.forEach(c => { const d = Math.floor(c.year/10)*10; dc[d] = (dc[d]||0)+1; });
+  const maxD = Math.max(...Object.values(dc));
+  const dg = document.getElementById('decadeGrid');
+  if (dg) dg.innerHTML = Object.keys(dc).sort().map(d =>
+    '<div class="decade-card"><div class="decade-num">' + dc[d] + '</div>' +
+    '<div class="decade-lbl">' + d + 's</div>' +
+    '<div class="decade-bar"><div class="decade-fill" style="width:' + Math.round(dc[d]/maxD*100) + '%"></div></div></div>'
+  ).join('');
+}
+
+/* ═══════════════════════════════════════════════
+   INSIGHTS
+═══════════════════════════════════════════════ */
+(function buildInsights() {
+  const el = document.getElementById('insightGrid');
+  if (!el || !CITES.length) return;
+  const years = CITES.map(c => Number(c.year));
+  const minY = Math.min(...years), maxY = Math.max(...years);
+  const avgY = Math.round(years.reduce((a,b) => a+b, 0) / years.length);
+  const ac = {};
+  CITES.forEach(c => { ac[c.authors] = (ac[c.authors]||0)+1; });
+  const topA = Object.entries(ac).sort((a,b) => b[1]-a[1])[0];
+  const recent = years.filter(y => y >= 2019).length;
+  const recentPct = Math.round(recent / years.length * 100);
+  const uniqueA = Object.keys(ac).length;
+  const divPct = Math.round(uniqueA / CITES.length * 100);
+
+  let score = 40;
+  if (recentPct >= 30) score += 20; else if (recentPct >= 15) score += 10;
+  if (divPct >= 70) score += 20; else if (divPct >= 50) score += 10;
+  if (CITES.length >= 20) score += 10; else if (CITES.length >= 10) score += 5;
+  if (maxY - minY >= 10) score += 10;
+  score = Math.min(score, 100);
+  const sc = score >= 75 ? '#34d399' : score >= 50 ? '#fbbf24' : '#fb7185';
+  const sl = score >= 75 ? 'Strong' : score >= 50 ? 'Moderate' : 'Needs work';
+
+  el.innerHTML =
+    '<div class="insight-box">' +
+      '<div style="font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.09em;color:var(--t3);margin-bottom:10px;">Reference Quality Score</div>' +
+      '<div style="font-size:2.8rem;font-weight:900;letter-spacing:-.04em;color:' + sc + ';line-height:1;">' + score + '<span style="font-size:1rem;color:var(--t3);">/100</span></div>' +
+      '<div style="font-size:.8rem;font-weight:600;color:' + sc + ';margin:4px 0 14px;">' + sl + '</div>' +
+      '<div class="quality-bar-wrap"><div class="quality-label"><span>Recent coverage (2019+)</span><span>' + recentPct + '%</span></div>' +
+        '<div class="quality-bar"><div class="quality-fill" style="width:' + recentPct + '%;background:linear-gradient(90deg,#6366f1,#8b5cf6);"></div></div></div>' +
+      '<div class="quality-bar-wrap" style="margin-top:8px;"><div class="quality-label"><span>Author diversity</span><span>' + divPct + '%</span></div>' +
+        '<div class="quality-bar"><div class="quality-fill" style="width:' + divPct + '%;background:linear-gradient(90deg,#10b981,#34d399);"></div></div></div>' +
+    '</div>' +
+    '<div class="insight-box">' +
+      '<div style="font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.09em;color:var(--t3);margin-bottom:12px;">Key Statistics</div>' +
+      '<div style="display:flex;flex-direction:column;gap:9px;font-size:.82rem;">' +
+        kv('Year span', minY + ' – ' + maxY) +
+        kv('Average year', avgY) +
+        kv('Unique authors', uniqueA) +
+        kv('Top author', topA ? topA[0] + ' (' + topA[1] + '×)' : '—', '#fbbf24') +
+        kv('Citations since 2019', recent + ' (' + recentPct + '%)', recentPct >= 25 ? '#34d399' : '#fbbf24') +
+      '</div>' +
+    '</div>';
+
+  function kv(k, v, vc) {
+    return '<div style="display:flex;justify-content:space-between;border-bottom:1px solid rgba(255,255,255,.04);padding-bottom:8px;">' +
+      '<span style="color:var(--t2);">' + k + '</span>' +
+      '<span style="font-weight:700;color:' + (vc||'var(--t1)') + ';">' + v + '</span></div>';
+  }
+})();
+
+/* ═══════════════════════════════════════════════
+   GAP CHECK
+═══════════════════════════════════════════════ */
+(function buildGaps() {
+  const el = document.getElementById('gapList');
+  if (!el || !CITES.length) return;
+  const gaps = [];
+  const years = CITES.map(c => Number(c.year)).sort((a,b)=>a-b);
+  const now = new Date().getFullYear();
+  const recent = years.filter(y => y >= now-5).length;
+
+  if (recent === 0)
+    gaps.push({ icon:'bi-clock-history', text:'<strong>No citations from the last 5 years.</strong> Academic reviewers often expect engagement with current literature. Consider adding recent references.' });
+  else if (recent < 3)
+    gaps.push({ icon:'bi-clock', text:'<strong>Only ' + recent + ' citation(s) from the last 5 years.</strong> Strengthening recent coverage will improve the paper\'s perceived currency.' });
+
+  const ySet = new Set(years);
+  if (years.length > 1 && years[years.length-1] - years[0] > 5) {
+    const gapYrs = [];
+    for (let y = years[0]; y <= years[years.length-1]; y++) { if (!ySet.has(y)) gapYrs.push(y); }
+    if (gapYrs.length > 3)
+      gaps.push({ icon:'bi-calendar-x', text:'<strong>Citation gaps in ' + gapYrs.length + ' year(s)</strong> (' + years[0] + '–' + years[years.length-1] + '): ' + gapYrs.slice(0,8).join(', ') + (gapYrs.length>8?'…':'') + '. Gaps may suggest the field paused — worth investigating.' });
+  }
+
+  const ac = {};
+  CITES.forEach(c => { ac[c.authors] = (ac[c.authors]||0)+1; });
+  const over = Object.entries(ac).filter(([,n]) => n >= 4);
+  if (over.length)
+    gaps.push({ icon:'bi-person-exclamation', text:'<strong>Over-reliance:</strong> ' + over.map(([a,n]) => a+' ('+n+'×)').join(', ') + '. Cited 4+ times each. Diversifying sources strengthens credibility.' });
+
+  const uniqueA = Object.keys(ac).length;
+  if (uniqueA < CITES.length * 0.4)
+    gaps.push({ icon:'bi-people', text:'<strong>Low author diversity:</strong> ' + uniqueA + ' unique authors across ' + CITES.length + ' citations. Broader sourcing is generally preferred.' });
+
+  gaps.push({ icon:'bi-lightbulb', text:'<strong>Tip:</strong> Cross-reference with <a href="https://scholar.google.com" target="_blank" style="color:#38bdf8;">Google Scholar</a> or <a href="https://www.semanticscholar.org" target="_blank" style="color:#38bdf8;">Semantic Scholar</a> to find seminal papers you may have missed.' });
+
+  el.innerHTML = gaps.map(g =>
+    '<div class="gap-item"><i class="bi ' + g.icon + ' gap-icon"></i><div class="gap-text">' + g.text + '</div></div>'
+  ).join('');
+})();
+
+/* ═══════════════════════════════════════════════
+   CYTOSCAPE NETWORK
+═══════════════════════════════════════════════ */
+let citGraph = null;
+function initGraph() {
+  if (citGraph) return;
+  const container = document.getElementById('citGraphContainer');
+  if (!container) return;
+  if (!GRAPH || !GRAPH.nodes || !GRAPH.nodes.length) {
+    container.innerHTML = '<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;gap:12px;color:var(--t3);"><i class="bi bi-diagram-2" style="font-size:2.2rem;opacity:.3;"></i><p style="font-size:.85rem;margin:0;">No network data</p></div>';
+    return;
+  }
+  citGraph = cytoscape({ container,
+    elements: [...GRAPH.nodes, ...GRAPH.edges],
+    style: [
+      { selector:'node', style:{ 'background-color':'#4f46e5','border-color':'#818cf8','border-width':2,
+        'label':'data(label)','font-family':'Inter,sans-serif','font-size':'9px','font-weight':'700',
+        'color':'#fff','text-halign':'center','text-valign':'center','width':'64px','height':'64px',
+        'text-wrap':'wrap','text-max-width':'56px','text-outline-color':'#312e81','text-outline-width':'1.5px'}},
+      { selector:'node:selected', style:{'background-color':'#6366f1','border-color':'#fff','border-width':3}},
+      { selector:'edge', style:{'line-color':'#334155','width':1.5,'curve-style':'bezier',
+        'target-arrow-color':'#475569','target-arrow-shape':'triangle','arrow-scale':1.1,'opacity':.65}},
+      { selector:'edge:selected', style:{'line-color':'#818cf8','target-arrow-color':'#818cf8','opacity':1}}
+    ],
+    layout:{ name: GRAPH.nodes.length>12?'cose':'breadthfirst', directed:true, padding:30,
+      animate:true, animationDuration:700, nodeDimensionsIncludeLabels:true,
+      nodeRepulsion:450000, edgeElasticity:100, idealEdgeLength:120 }
+  });
+}
+
+/* ═══════════════════════════════════════════════
+   DOWNLOADS
+═══════════════════════════════════════════════ */
+function blob(content, filename, type) {
+  const b = new Blob([content], {type}), u = URL.createObjectURL(b), a = document.createElement('a');
+  a.href=u; a.download=filename; a.click(); URL.revokeObjectURL(u);
+}
+function downloadCSV() {
+  if (!CITES.length) { alert('No citations.'); return; }
+  const rows = [['#','Authors','Year','Type']];
+  CITES.forEach((c,i) => rows.push([i+1,c.authors,c.year,c.type||'Journal']));
+  blob(rows.map(r=>r.map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(',')).join('\n'),'citations.csv','text/csv');
+}
+function downloadFmt(style) {
+  if (!CITES.length) { alert('No citations.'); return; }
+  const lbl = {apa:'APA 7th Edition',mla:'MLA 9th Edition',chicago:'Chicago 17th Edition',ieee:'IEEE',harvard:'Harvard',vancouver:'Vancouver'}[style]||style.toUpperCase();
+  const lines = CITES.map((c,i) => (i+1)+'. '+fmt(style,c.authors,c.year));
+  blob(lbl+' REFERENCES\n\n'+lines.join('\n\n'), 'citations_'+style+'.txt', 'text/plain');
+}
+function downloadFormatted() { downloadFmt(currentFmt); }
+function downloadJSON() {
+  if (!CITES.length) { alert('No citations.'); return; }
+  blob(JSON.stringify(CITES,null,2),'citations.json','application/json');
+}
+
+/* ═══════════════════════════════════════════════
+   TOAST
+═══════════════════════════════════════════════ */
+function showToast() {
+  const t = document.getElementById('toast');
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2000);
+}
+
+/* ═══════════════════════════════════════════════
+   UTILS
+═══════════════════════════════════════════════ */
+function esc(s)  { return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function esc2(s) { return s.replace(/\\/g,'\\\\').replace(/'/g,"\\'"); }
+
+/* ═══════════════════════════════════════════════
+   CITEBOT — calls Flask /chatbot
+═══════════════════════════════════════════════ */
+const CB_SYS = `You are CiteBot, an expert AI assistant for academic citation management embedded in GenAI Knowledge Mapper.
+
+Expertise: APA 7th, MLA 9th, Chicago 17th, IEEE, Harvard, Vancouver citation formats. Reference management, DOI lookup guidance, citation networks, co-citation analysis, avoiding plagiarism, in-text citations, reference lists, footnotes. Academic writing best practices.
+
+Tone: professional and friendly. Keep replies concise (2-4 sentences). Use bullet points for lists. Bold key terms with **double asterisks**.`;
+
+let cbHist = [], cbOpen = false;
+
+function toggleBot() {
+  cbOpen = !cbOpen;
+  document.getElementById('citebot-window').classList.toggle('open', cbOpen);
+  const b = document.querySelector('#citebot-fab .fab-badge');
+  if (cbOpen && b) b.style.display = 'none';
+  if (cbOpen) setTimeout(() => document.getElementById('cbInput').focus(), 100);
+}
+
+function cbChip(text) {
+  document.getElementById('cbInput').value = text;
+  document.getElementById('cbChips').style.display = 'none';
+  sendBot();
+}
+
+function cbAppend(txt, role) {
+  const c = document.getElementById('cbMsgs'), d = document.createElement('div');
+  d.className = 'cb-msg ' + role;
+  d.innerHTML = txt.replace(/\n/g,'<br>').replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>');
+  c.appendChild(d); c.scrollTop = c.scrollHeight;
+}
+
+function cbTyping() {
+  const c = document.getElementById('cbMsgs'), d = document.createElement('div');
+  d.className = 'cb-typing'; d.id = 'cbTyp';
+  d.innerHTML = '<span></span><span></span><span></span>';
+  c.appendChild(d); c.scrollTop = c.scrollHeight;
+}
+function cbNoTyping() { const e = document.getElementById('cbTyp'); if (e) e.remove(); }
+
+async function sendBot() {
+  const inp = document.getElementById('cbInput');
+  const btn = document.getElementById('cbSend');
+  const text = inp.value.trim();
+  if (!text) return;
+  inp.value = ''; btn.disabled = true;
+  cbAppend(text, 'user');
+  cbHist.push({ role: 'user', content: text });
+  cbTyping();
+  try {
+    const res = await fetch('/chatbot', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ system: CB_SYS, messages: cbHist })
+    });
+    const data = await res.json();
+    cbNoTyping();
+    const reply = data.reply || data.error || 'Sorry, no response. Please try again.';
+    cbAppend(reply, 'bot');
+    cbHist.push({ role: 'assistant', content: reply });
+  } catch(e) {
+    cbNoTyping();
+    cbAppend('⚠️ Connection error. Please try again.', 'bot');
+  }
+  btn.disabled = false;
+  document.getElementById('cbInput').focus();
+}
+
+</script>
+</body>
+</html>

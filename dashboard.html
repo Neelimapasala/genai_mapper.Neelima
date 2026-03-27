@@ -1,0 +1,1052 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard — GenAI Knowledge Mapper</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&display=swap" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+:root {
+  --sw: 230px; --th: 60px;
+  /* Brand palette */
+  --ink:    #0a0f1e;
+  --ink2:   #1a2035;
+  --ink3:   #2d3555;
+  --muted:  #6b7a9e;
+  --dim:    #9ba5c0;
+  --line:   rgba(255,255,255,.07);
+  --surf:   rgba(255,255,255,.04);
+  --surf2:  rgba(255,255,255,.07);
+  /* Accents */
+  --a1: #4f8ef7;   /* blue   */
+  --a2: #7c5cfc;   /* violet */
+  --a3: #00d4aa;   /* teal   */
+  --a4: #f7934c;   /* amber  */
+  --a5: #f25f7c;   /* rose   */
+  --a6: #38d9f5;   /* cyan   */
+  /* Gradients */
+  --g1: linear-gradient(135deg, #4f8ef7, #7c5cfc);
+  --g2: linear-gradient(135deg, #00d4aa, #4f8ef7);
+  --g3: linear-gradient(135deg, #f7934c, #f25f7c);
+  --g4: linear-gradient(135deg, #7c5cfc, #f25f7c);
+  --g5: linear-gradient(135deg, #38d9f5, #00d4aa);
+  /* Radius */
+  --r1: 12px; --r2: 18px; --r3: 24px;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: var(--ink);
+  color: #e4e9f7;
+  font-size: 14px;
+  line-height: 1.6;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* ── Noise texture overlay ── */
+body::before {
+  content: '';
+  position: fixed; inset: 0; z-index: 0; pointer-events: none;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+  background-size: 200px 200px;
+  opacity: .4;
+}
+
+/* ── Ambient glow blobs ── */
+.blob {
+  position: fixed; border-radius: 50%; filter: blur(90px);
+  pointer-events: none; z-index: 0; opacity: .18;
+  animation: drift 20s ease-in-out infinite;
+}
+.blob-1 { width: 500px; height: 500px; background: var(--a2); top: -150px; left: -100px; animation-delay: 0s; }
+.blob-2 { width: 400px; height: 400px; background: var(--a1); bottom: 10%; right: -100px; animation-delay: -7s; }
+.blob-3 { width: 300px; height: 300px; background: var(--a3); bottom: 30%; left: 20%; animation-delay: -14s; }
+@keyframes drift {
+  0%,100% { transform: translate(0,0) scale(1); }
+  33%      { transform: translate(30px,-40px) scale(1.05); }
+  66%      { transform: translate(-20px,25px) scale(.97); }
+}
+
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-thumb { background: var(--ink3); border-radius: 99px; }
+
+/* ════════════════════════════════
+   SIDEBAR
+════════════════════════════════ */
+.sidebar {
+  position: fixed; top: 0; left: 0;
+  width: var(--sw); height: 100vh;
+  background: var(--ink2);
+  border-right: 1px solid var(--line);
+  display: flex; flex-direction: column;
+  z-index: 300; overflow-y: auto;
+}
+
+.sb-logo {
+  padding: 20px 18px 16px;
+  border-bottom: 1px solid var(--line);
+  display: flex; align-items: center; gap: 11px;
+}
+.sb-logo-icon {
+  width: 36px; height: 36px; border-radius: 10px; flex-shrink: 0;
+  background: var(--g1);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1rem; color: #fff;
+  box-shadow: 0 4px 16px rgba(79,142,247,.4);
+}
+.sb-logo-text .t1 { font-family: 'Syne', sans-serif; font-size: .9rem; font-weight: 800; color: #fff; letter-spacing: -.01em; }
+.sb-logo-text .t2 { font-size: .62rem; color: var(--muted); margin-top: 1px; }
+
+.sb-nav { padding: 12px 10px; flex: 1; }
+.sb-section {
+  font-size: .58rem; font-weight: 700; letter-spacing: .14em;
+  text-transform: uppercase; color: var(--ink3);
+  padding: 14px 10px 5px;
+}
+.sb-link {
+  display: flex; align-items: center; gap: 9px;
+  padding: 9px 10px; border-radius: 10px;
+  color: var(--muted); font-size: .8rem; font-weight: 500;
+  text-decoration: none; transition: .15s; margin-bottom: 1px;
+}
+.sb-link i { font-size: .85rem; width: 16px; text-align: center; flex-shrink: 0; }
+.sb-link:hover { background: var(--surf2); color: #e4e9f7; }
+.sb-link.active { background: rgba(79,142,247,.15); color: var(--a1); font-weight: 600; }
+.sb-link.active i { color: var(--a1); }
+.sb-badge { margin-left: auto; font-size: .56rem; font-weight: 700; padding: 2px 7px; border-radius: 99px; background: rgba(79,142,247,.2); color: var(--a1); }
+
+.sb-footer { padding: 12px 16px; border-top: 1px solid var(--line); font-size: .65rem; color: var(--ink3); }
+
+/* ════════════════════════════════
+   TOPBAR
+════════════════════════════════ */
+.topbar {
+  position: fixed; top: 0; left: var(--sw); right: 0;
+  height: var(--th);
+  background: rgba(10,15,30,.85);
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--line);
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 24px; z-index: 200;
+}
+.tb-left { display: flex; align-items: center; gap: 12px; }
+.tb-right { display: flex; align-items: center; gap: 8px; }
+.breadcrumb { display: flex; align-items: center; gap: 6px; font-size: .75rem; color: var(--muted); }
+.breadcrumb a { color: var(--a1); text-decoration: none; }
+.breadcrumb i { font-size: .6rem; }
+.tb-btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 7px 14px; border-radius: 9px; font-size: .78rem; font-weight: 600;
+  border: 1px solid var(--line); background: var(--surf);
+  color: var(--dim); cursor: pointer; transition: .15s; text-decoration: none;
+  font-family: 'DM Sans', sans-serif;
+}
+.tb-btn:hover { background: var(--surf2); color: #e4e9f7; border-color: rgba(255,255,255,.15); }
+.tb-btn.primary { background: var(--g1); color: #fff; border-color: transparent; }
+.tb-btn.primary:hover { opacity: .9; }
+.tb-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--a3); box-shadow: 0 0 8px var(--a3); animation: pulse 2s ease-in-out infinite; }
+@keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.5;transform:scale(.8)} }
+.avatar {
+  width: 32px; height: 32px; border-radius: 50%; flex-shrink: 0;
+  background: var(--g1); display: flex; align-items: center; justify-content: center;
+  font-family: 'Syne', sans-serif; color: #fff; font-size: .68rem; font-weight: 800; cursor: pointer;
+}
+
+/* ════════════════════════════════
+   LAYOUT
+════════════════════════════════ */
+.main { margin-left: var(--sw); padding-top: var(--th); position: relative; z-index: 1; }
+.body { padding: 28px 28px 60px; }
+
+/* ── Page header ── */
+.ph { display: flex; align-items: flex-start; justify-content: space-between; flex-wrap: wrap; gap: 16px; margin-bottom: 32px; }
+.ph-eyebrow { font-size: .7rem; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; color: var(--a1); margin-bottom: 6px; display: flex; align-items: center; gap: 6px; }
+.ph-eyebrow::before { content: ''; width: 18px; height: 2px; background: var(--a1); border-radius: 2px; }
+.ph-title { font-family: 'Syne', sans-serif; font-size: 1.75rem; font-weight: 800; color: #fff; letter-spacing: -.03em; line-height: 1.1; margin-bottom: 6px; }
+.ph-title span { background: var(--g1); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+.ph-sub { font-size: .8rem; color: var(--muted); }
+
+/* ── Section label ── */
+.sec-label {
+  display: flex; align-items: center; gap: 10px;
+  font-family: 'Syne', sans-serif; font-size: .72rem; font-weight: 700;
+  letter-spacing: .1em; text-transform: uppercase; color: var(--muted);
+  margin-bottom: 16px;
+}
+.sec-label::after { content: ''; flex: 1; height: 1px; background: var(--line); }
+
+/* ════════════════════════════════
+   KPI CARDS
+════════════════════════════════ */
+.kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 14px;
+  margin-bottom: 28px;
+}
+.kpi {
+  background: var(--ink2);
+  border: 1px solid var(--line);
+  border-radius: var(--r2);
+  padding: 20px 18px;
+  position: relative; overflow: hidden;
+  transition: .25s; cursor: default;
+}
+.kpi:hover { transform: translateY(-3px); border-color: var(--kpi-c, var(--a1)); box-shadow: 0 8px 32px rgba(0,0,0,.3); }
+.kpi::before {
+  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+  background: var(--kpi-g);
+  opacity: .8;
+}
+.kpi-top { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 16px; }
+.kpi-icon {
+  width: 40px; height: 40px; border-radius: 10px;
+  background: var(--kpi-g); opacity: .15;
+  position: absolute; top: 14px; right: 14px;
+  display: flex; align-items: center; justify-content: center;
+}
+.kpi-icon-real {
+  width: 40px; height: 40px; border-radius: 10px;
+  position: absolute; top: 14px; right: 14px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1rem; color: var(--kpi-c);
+}
+.kpi-chip {
+  font-size: .58rem; font-weight: 700; letter-spacing: .07em;
+  text-transform: uppercase; color: var(--kpi-c);
+  background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.07);
+  padding: 3px 8px; border-radius: 99px;
+}
+.kpi-val {
+  font-family: 'Syne', sans-serif;
+  font-size: 2.4rem; font-weight: 800; color: #fff;
+  letter-spacing: -.04em; line-height: 1; margin-bottom: 5px;
+}
+.kpi-label { font-size: .72rem; color: var(--muted); font-weight: 500; }
+.kpi-trend {
+  display: flex; align-items: center; gap: 5px;
+  font-size: .7rem; font-weight: 600; margin-top: 10px;
+  color: var(--kpi-c);
+}
+.kpi-trend i { font-size: .75rem; }
+
+/* ════════════════════════════════
+   CARDS
+════════════════════════════════ */
+.card {
+  background: var(--ink2);
+  border: 1px solid var(--line);
+  border-radius: var(--r2);
+  overflow: hidden;
+  transition: .2s;
+}
+.card:hover { border-color: rgba(255,255,255,.1); }
+.card-head {
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--line);
+  display: flex; align-items: center; justify-content: space-between;
+}
+.ch-title {
+  font-family: 'Syne', sans-serif;
+  font-size: .85rem; font-weight: 700; color: #fff;
+  display: flex; align-items: center; gap: 8px;
+}
+.ch-icon {
+  width: 28px; height: 28px; border-radius: 7px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: .8rem;
+}
+.ch-sub { font-size: .7rem; color: var(--muted); margin-top: 2px; }
+.ch-tag {
+  font-size: .6rem; font-weight: 700; padding: 3px 10px;
+  border-radius: 99px; border: 1px solid var(--line);
+  color: var(--muted); background: var(--surf);
+  text-transform: uppercase; letter-spacing: .07em;
+}
+.card-body { padding: 20px; }
+
+/* ════════════════════════════════
+   GRID LAYOUTS
+════════════════════════════════ */
+.row { display: grid; gap: 16px; margin-bottom: 20px; }
+.col-3-2 { grid-template-columns: 3fr 2fr; }
+.col-1-1 { grid-template-columns: 1fr 1fr; }
+.col-1-1-1 { grid-template-columns: 1fr 1fr 1fr; }
+.col-full { grid-template-columns: 1fr; }
+.col-5-7 { grid-template-columns: 5fr 7fr; }
+
+/* ════════════════════════════════
+   INSIGHTS
+════════════════════════════════ */
+.insight-block { display: flex; flex-direction: column; gap: 18px; }
+.ins-head {
+  font-size: .62rem; font-weight: 700; letter-spacing: .1em;
+  text-transform: uppercase; color: var(--muted);
+  display: flex; align-items: center; gap: 6px; margin-bottom: 8px;
+}
+.e-tag {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 5px 12px; margin: 3px 2px; border-radius: 99px;
+  font-size: .74rem; font-weight: 500;
+  background: rgba(79,142,247,.1); color: var(--a1);
+  border: 1px solid rgba(79,142,247,.2); transition: .15s;
+}
+.e-tag:hover { background: rgba(79,142,247,.18); }
+.e-tag::before { content: ''; width: 5px; height: 5px; border-radius: 50%; background: var(--a1); flex-shrink: 0; }
+.rel-pill {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 8px 16px; border-radius: 10px;
+  font-size: .82rem; font-weight: 600;
+  background: rgba(0,212,170,.1); color: var(--a3);
+  border: 1px solid rgba(0,212,170,.2);
+}
+.summary-box {
+  background: linear-gradient(135deg, rgba(247,147,76,.06), rgba(242,95,124,.04));
+  border: 1px solid rgba(247,147,76,.15);
+  border-left: 3px solid var(--a4);
+  border-radius: 12px;
+  padding: 16px 18px;
+  font-size: .84rem; line-height: 1.75; color: #c8d0e7;
+  position: relative;
+}
+.summary-box::before {
+  content: '\201C'; position: absolute; top: -6px; left: 12px;
+  font-size: 3.5rem; color: var(--a4); opacity: .15;
+  font-family: Georgia, serif; line-height: 1;
+}
+.no-data { color: var(--ink3); font-style: italic; font-size: .8rem; }
+
+/* ════════════════════════════════
+   TOOL LIST
+════════════════════════════════ */
+.tool-list { display: flex; flex-direction: column; gap: 6px; }
+.tool-link {
+  display: flex; align-items: center; gap: 12px;
+  padding: 11px 14px; border-radius: 11px;
+  background: var(--surf); border: 1px solid var(--line);
+  text-decoration: none; color: var(--dim);
+  transition: .15s;
+}
+.tool-link:hover {
+  background: var(--surf2); border-color: var(--tc, var(--a1));
+  color: #e4e9f7; transform: translateX(3px);
+}
+.tl-icon {
+  width: 36px; height: 36px; border-radius: 9px; flex-shrink: 0;
+  background: var(--ti-bg); color: var(--tc);
+  display: flex; align-items: center; justify-content: center;
+  font-size: .9rem;
+}
+.tl-name { font-size: .82rem; font-weight: 600; color: #e4e9f7; }
+.tl-sub { font-size: .68rem; color: var(--muted); }
+.tl-arr { margin-left: auto; color: var(--ink3); font-size: .7rem; transition: .15s; }
+.tool-link:hover .tl-arr { color: var(--tc, var(--a1)); transform: translateX(3px); }
+
+/* ════════════════════════════════
+   HISTORY FEED
+════════════════════════════════ */
+.hist-item {
+  display: flex; align-items: flex-start; gap: 13px;
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--line);
+  transition: .15s;
+}
+.hist-item:last-child { border-bottom: none; }
+.hist-item:hover { background: var(--surf); }
+.hist-icon {
+  width: 38px; height: 38px; border-radius: 10px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center; font-size: .9rem;
+}
+.hist-main { flex: 1; min-width: 0; }
+.hist-name { font-size: .82rem; font-weight: 600; color: #e4e9f7; margin-bottom: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.hist-meta { font-size: .68rem; color: var(--muted); margin-bottom: 5px; }
+.hist-sum { font-size: .75rem; color: var(--dim); line-height: 1.5; }
+.hist-right { font-size: .68rem; color: var(--ink3); flex-shrink: 0; text-align: right; }
+
+/* ════════════════════════════════
+   EXPORT CARDS
+════════════════════════════════ */
+.export-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 14px; }
+.exp-card {
+  background: var(--surf); border: 1px solid var(--line);
+  border-radius: var(--r2); padding: 22px 18px;
+  display: flex; flex-direction: column; align-items: center;
+  text-align: center; gap: 12px; cursor: pointer;
+  transition: .2s; position: relative; overflow: hidden;
+}
+.exp-card::before {
+  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+  background: var(--exp-g);
+}
+.exp-card:hover { transform: translateY(-4px); border-color: var(--exp-c); background: var(--ink2); box-shadow: 0 12px 40px rgba(0,0,0,.3); }
+.exp-icon { width: 52px; height: 52px; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 1.4rem; background: var(--exp-lt); color: var(--exp-c); transition: .2s; }
+.exp-card:hover .exp-icon { transform: scale(1.08); }
+.exp-title { font-family: 'Syne', sans-serif; font-size: .88rem; font-weight: 700; color: #fff; }
+.exp-desc { font-size: .7rem; color: var(--muted); line-height: 1.55; }
+.exp-btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 7px 16px; border-radius: 99px; font-size: .72rem; font-weight: 700;
+  border: 1.5px solid var(--exp-c); color: var(--exp-c); background: transparent; transition: .2s;
+  font-family: 'DM Sans', sans-serif;
+}
+.exp-card:hover .exp-btn { background: var(--exp-c); color: var(--ink); }
+
+/* ════════════════════════════════
+   PLATFORM STATUS STRIP
+════════════════════════════════ */
+.status-strip {
+  display: grid; grid-template-columns: repeat(4,1fr); gap: 12px; margin-bottom: 20px;
+}
+.status-item {
+  background: var(--surf); border: 1px solid var(--line);
+  border-radius: var(--r1); padding: 12px 16px;
+  display: flex; align-items: center; gap: 10px;
+}
+.status-dot {
+  width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0;
+  animation: pulse 2.5s ease-in-out infinite;
+}
+.status-dot.green { background: var(--a3); box-shadow: 0 0 8px var(--a3); }
+.status-dot.blue  { background: var(--a1); box-shadow: 0 0 8px var(--a1); }
+.status-dot.amber { background: var(--a4); box-shadow: 0 0 8px var(--a4); }
+.status-dot.violet{ background: var(--a2); box-shadow: 0 0 8px var(--a2); }
+.status-label { font-size: .72rem; color: var(--muted); }
+.status-val { font-size: .78rem; font-weight: 600; color: #e4e9f7; }
+
+/* ════════════════════════════════
+   FOOTER
+════════════════════════════════ */
+.pg-footer { text-align: center; padding: 20px 0 4px; font-size: .68rem; color: var(--ink3); border-top: 1px solid var(--line); margin-top: 12px; }
+.pg-footer a { color: var(--a1); text-decoration: none; }
+
+/* ════════════════════════════════
+   CHART OVERRIDES
+════════════════════════════════ */
+.chart-wrap { position: relative; }
+
+/* ════════════════════════════════
+   RESPONSIVE
+════════════════════════════════ */
+@media(max-width:1400px) { .kpi-grid { grid-template-columns: repeat(3,1fr); } }
+@media(max-width:1200px) { .col-3-2,.col-5-7 { grid-template-columns: 1fr; } .kpi-grid { grid-template-columns: repeat(2,1fr); } }
+@media(max-width:992px)  { .sidebar { transform: translateX(-100%); } .main,.topbar { margin-left: 0; left: 0; } .col-1-1,.col-1-1-1 { grid-template-columns: 1fr; } .export-grid { grid-template-columns: 1fr 1fr; } .status-strip { grid-template-columns: repeat(2,1fr); } }
+@media(max-width:576px)  { .kpi-grid { grid-template-columns: 1fr 1fr; } .export-grid { grid-template-columns: 1fr; } .body { padding: 16px 14px 40px; } }
+
+/* ── Fade-in animation ── */
+@keyframes fadeUp { from { opacity:0; transform:translateY(16px); } to { opacity:1; transform:translateY(0); } }
+.kpi, .card, .status-item { animation: fadeUp .5s ease both; }
+.kpi:nth-child(1) { animation-delay:.05s } .kpi:nth-child(2) { animation-delay:.1s } .kpi:nth-child(3) { animation-delay:.15s } .kpi:nth-child(4) { animation-delay:.2s } .kpi:nth-child(5) { animation-delay:.25s }
+</style>
+</head>
+<body>
+
+<div class="blob blob-1"></div>
+<div class="blob blob-2"></div>
+<div class="blob blob-3"></div>
+
+<!-- ════ SIDEBAR ════ -->
+<aside class="sidebar">
+  <div class="sb-logo">
+    <div class="sb-logo-icon"><i class="bi bi-braces-asterisk"></i></div>
+    <div class="sb-logo-text">
+      <div class="t1">GenAI Mapper</div>
+      <div class="t2">NLP Research Platform</div>
+    </div>
+  </div>
+  <nav class="sb-nav">
+    <div class="sb-section">Main</div>
+    <a href="/dashboard" class="sb-link active"><i class="bi bi-speedometer2"></i> Dashboard <span class="sb-badge">Live</span></a>
+    <a href="/map" class="sb-link"><i class="bi bi-share-fill"></i> Knowledge Map</a>
+
+    <div class="sb-section">Research</div>
+    <a href="/research"   class="sb-link"><i class="bi bi-mortarboard-fill"></i> Paper Analyzer</a>
+    <a href="/benchmark"  class="sb-link"><i class="bi bi-trophy-fill"></i> Benchmarking</a>
+    <a href="/datasets"   class="sb-link"><i class="bi bi-collection-fill"></i> Dataset Explorer</a>
+    <a href="/citations"  class="sb-link"><i class="bi bi-bookmarks-fill"></i> Citation Tracker</a>
+    <a href="/gap-finder" class="sb-link"><i class="bi bi-binoculars-fill"></i> Gap Finder</a>
+    <a href="/literature" class="sb-link"><i class="bi bi-file-earmark-richtext-fill"></i> Literature Review</a>
+
+    <div class="sb-section">Platform</div>
+    <a href="/"        class="sb-link"><i class="bi bi-house-door-fill"></i> Home</a>
+    <a href="/about"   class="sb-link"><i class="bi bi-person-circle"></i> About</a>
+    <a href="/contact" class="sb-link"><i class="bi bi-send-fill"></i> Contact</a>
+    <a href="/history" class="sb-link"><i class="bi bi-clock-history"></i> History</a>
+  </nav>
+  <div class="sb-footer">© 2026 GenAI Knowledge Mapper</div>
+</aside>
+
+<!-- ════ TOPBAR ════ -->
+<header class="topbar">
+  <div class="tb-left">
+    <nav class="breadcrumb">
+      <a href="/"><i class="bi bi-house-door"></i> Home</a>
+      <i class="bi bi-chevron-right"></i>
+      <span style="color:#e4e9f7;font-weight:600;">Dashboard</span>
+    </nav>
+  </div>
+  <div class="tb-right">
+    <div class="tb-dot"></div>
+    <span style="font-size:.72rem;color:var(--a3);font-weight:600;">All systems live</span>
+    <a href="/map" class="tb-btn primary"><i class="bi bi-magic"></i> New Analysis</a>
+    <div class="avatar">NP</div>
+  </div>
+</header>
+
+{% set current_page = 'dashboard' %}
+{% include 'page_nav.html' %}
+<style>
+  .page-nav { top: var(--th) !important; left: var(--sw) !important; right: 0 !important; width: auto !important; }
+  .main { padding-top: calc(var(--th) + 46px) !important; }
+  @media(max-width:768px) { .page-nav { left:0!important; } }
+</style>
+
+<!-- ════ MAIN ════ -->
+<main class="main">
+<div class="body">
+
+  <!-- ① PAGE HEADER -->
+  <div class="ph">
+    <div>
+      <div class="ph-eyebrow"><i class="bi bi-grid-3x3-gap-fill"></i> Overview</div>
+      <div class="ph-title">Research <span>Analytics</span> Dashboard</div>
+      <div class="ph-sub">Real-time NLP insights powered by spaCy &amp; Groq LLaMA-3.3-70b · Data updates on every analysis</div>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+      <a href="/map"      class="tb-btn"><i class="bi bi-share"></i> Knowledge Map</a>
+      <a href="/research" class="tb-btn"><i class="bi bi-search-heart"></i> Analyze Paper</a>
+    </div>
+  </div>
+
+  <!-- ② PLATFORM STATUS STRIP -->
+  <div class="status-strip">
+    <div class="status-item">
+      <div class="status-dot green"></div>
+      <div><div class="status-label">NLP Engine</div><div class="status-val">spaCy Active</div></div>
+    </div>
+    <div class="status-item">
+      <div class="status-dot blue"></div>
+      <div><div class="status-label">AI Model</div><div class="status-val">Groq LLaMA-3.3</div></div>
+    </div>
+    <div class="status-item">
+      <div class="status-dot amber"></div>
+      <div><div class="status-label">Documents</div><div class="status-val" id="statusDocs">{{ documents_processed }} processed</div></div>
+    </div>
+    <div class="status-item">
+      <div class="status-dot violet"></div>
+      <div><div class="status-label">Confidence</div><div class="status-val">{{ ai_confidence }}% avg score</div></div>
+    </div>
+  </div>
+
+  <!-- ③ KPI CARDS -->
+  <div class="sec-label"><i class="bi bi-graph-up-arrow"></i> Key Performance Indicators</div>
+  <div class="kpi-grid">
+
+    <div class="kpi" style="--kpi-g:var(--g1);--kpi-c:var(--a1);">
+      <div class="kpi-icon"></div>
+      <div class="kpi-icon-real"><i class="bi bi-person-badge-fill"></i></div>
+      <div class="kpi-chip">Entities · NER</div>
+      <div class="kpi-val" id="v1">{{ total_entities }}</div>
+      <div class="kpi-label">Total Named Entities Extracted</div>
+      <div class="kpi-trend"><i class="bi bi-arrow-up-right"></i> People, Orgs, Locations &amp; more</div>
+    </div>
+
+    <div class="kpi" style="--kpi-g:var(--g2);--kpi-c:var(--a3);">
+      <div class="kpi-icon"></div>
+      <div class="kpi-icon-real"><i class="bi bi-diagram-2-fill"></i></div>
+      <div class="kpi-chip">Relations · SVO</div>
+      <div class="kpi-val" id="v2">{{ total_relations }}</div>
+      <div class="kpi-label">Subject–Verb–Object Relations</div>
+      <div class="kpi-trend"><i class="bi bi-bezier2"></i> Dependency-parsed connections</div>
+    </div>
+
+    <div class="kpi" style="--kpi-g:var(--g3);--kpi-c:var(--a4);">
+      <div class="kpi-icon"></div>
+      <div class="kpi-icon-real"><i class="bi bi-files"></i></div>
+      <div class="kpi-chip">Pipeline · Runs</div>
+      <div class="kpi-val" id="v3">{{ documents_processed }}</div>
+      <div class="kpi-label">Documents Processed</div>
+      <div class="kpi-trend"><i class="bi bi-check2-all"></i> Full NLP pipeline applied</div>
+    </div>
+
+    <div class="kpi" style="--kpi-g:var(--g4);--kpi-c:var(--a2);">
+      <div class="kpi-icon"></div>
+      <div class="kpi-icon-real"><i class="bi bi-bullseye"></i></div>
+      <div class="kpi-chip">Accuracy · AI</div>
+      <div class="kpi-val" id="v4">{{ ai_confidence }}%</div>
+      <div class="kpi-label">Model Confidence Score</div>
+      <div class="kpi-trend"><i class="bi bi-robot"></i> Groq LLaMA-3.3-70b rating</div>
+    </div>
+
+    <div class="kpi" style="--kpi-g:var(--g5);--kpi-c:var(--a6);">
+      <div class="kpi-icon"></div>
+      <div class="kpi-icon-real"><i class="bi bi-card-text"></i></div>
+      <div class="kpi-chip">Summary · AI</div>
+      <div class="kpi-val" id="v5">{{ avg_summary_length }}</div>
+      <div class="kpi-label">Avg Summary Length (words)</div>
+      <div class="kpi-trend"><i class="bi bi-stars"></i> AI-generated abstracts</div>
+    </div>
+
+  </div>
+
+  <!-- ④ CHARTS ROW -->
+  <div class="sec-label"><i class="bi bi-bar-chart-line-fill"></i> Visual Analytics</div>
+  <div class="row col-3-2" style="margin-bottom:16px;">
+
+    <!-- Bar + Line combined -->
+    <div class="card">
+      <div class="card-head">
+        <div>
+          <div class="ch-title">
+            <span class="ch-icon" style="background:rgba(79,142,247,.12);color:var(--a1);"><i class="bi bi-bar-chart-line-fill"></i></span>
+            Analysis Overview
+          </div>
+          <div class="ch-sub">Entities extracted · relations mapped · documents processed</div>
+        </div>
+        <span class="ch-tag">Bar Chart</span>
+      </div>
+      <div class="card-body"><canvas id="barChart" height="180"></canvas></div>
+    </div>
+
+    <!-- Doughnut -->
+    <div class="card">
+      <div class="card-head">
+        <div>
+          <div class="ch-title">
+            <span class="ch-icon" style="background:rgba(124,92,252,.12);color:var(--a2);"><i class="bi bi-pie-chart-fill"></i></span>
+            Entity Distribution
+          </div>
+          <div class="ch-sub">Top named entities by frequency</div>
+        </div>
+        <span class="ch-tag">Doughnut</span>
+      </div>
+      <div class="card-body"><canvas id="doughnutChart" height="180"></canvas></div>
+    </div>
+
+  </div>
+
+  <div class="row col-1-1" style="margin-bottom:20px;">
+
+    <!-- Trend Line -->
+    <div class="card">
+      <div class="card-head">
+        <div>
+          <div class="ch-title">
+            <span class="ch-icon" style="background:rgba(0,212,170,.1);color:var(--a3);"><i class="bi bi-graph-up"></i></span>
+            Analysis Trend
+          </div>
+          <div class="ch-sub">Entities &amp; relations across analysis sessions</div>
+        </div>
+        <span class="ch-tag">Line Chart</span>
+      </div>
+      <div class="card-body"><canvas id="trendChart" height="150"></canvas></div>
+    </div>
+
+    <!-- Radar -->
+    <div class="card">
+      <div class="card-head">
+        <div>
+          <div class="ch-title">
+            <span class="ch-icon" style="background:rgba(242,95,124,.1);color:var(--a5);"><i class="bi bi-reception-4"></i></span>
+            Performance Radar
+          </div>
+          <div class="ch-sub">Multi-dimensional platform health score</div>
+        </div>
+        <span class="ch-tag">Radar</span>
+      </div>
+      <div class="card-body"><canvas id="radarChart" height="150"></canvas></div>
+    </div>
+
+  </div>
+
+  <!-- ⑤ INSIGHTS + TOOLS -->
+  <div class="sec-label"><i class="bi bi-stars"></i> Insights &amp; Research Tools</div>
+  <div class="row col-5-7" style="margin-bottom:20px;">
+
+    <!-- Research Tools -->
+    <div class="card">
+      <div class="card-head">
+        <div>
+          <div class="ch-title">
+            <span class="ch-icon" style="background:rgba(255,255,255,.05);color:var(--dim);"><i class="bi bi-grid-fill"></i></span>
+            Research Tools
+          </div>
+          <div class="ch-sub">All platform features — quick access</div>
+        </div>
+      </div>
+      <div class="card-body" style="padding-bottom:10px;">
+        <div class="tool-list">
+          <a href="/map"       class="tool-link" style="--tc:var(--a1);--ti-bg:rgba(79,142,247,.1);">
+            <div class="tl-icon"><i class="bi bi-bezier2"></i></div>
+            <div><div class="tl-name">Knowledge Map</div><div class="tl-sub">Extract entities, relations &amp; parse text live</div></div>
+            <i class="bi bi-chevron-right tl-arr"></i>
+          </a>
+          <a href="/research"  class="tool-link" style="--tc:var(--a2);--ti-bg:rgba(124,92,252,.1);">
+            <div class="tl-icon"><i class="bi bi-mortarboard-fill"></i></div>
+            <div><div class="tl-name">Paper Analyzer</div><div class="tl-sub">Deep analysis of academic research papers</div></div>
+            <i class="bi bi-chevron-right tl-arr"></i>
+          </a>
+          <a href="/benchmark" class="tool-link" style="--tc:var(--a3);--ti-bg:rgba(0,212,170,.1);">
+            <div class="tl-icon"><i class="bi bi-trophy-fill"></i></div>
+            <div><div class="tl-name">Model Benchmarking</div><div class="tl-sub">Compare spaCy sm/lg vs Groq LLaMA accuracy</div></div>
+            <i class="bi bi-chevron-right tl-arr"></i>
+          </a>
+          <a href="/datasets"  class="tool-link" style="--tc:var(--a4);--ti-bg:rgba(247,147,76,.1);">
+            <div class="tl-icon"><i class="bi bi-layers-fill"></i></div>
+            <div><div class="tl-name">Dataset Explorer</div><div class="tl-sub">Token distribution, POS heatmaps &amp; stats</div></div>
+            <i class="bi bi-chevron-right tl-arr"></i>
+          </a>
+          <a href="/citations" class="tool-link" style="--tc:var(--a5);--ti-bg:rgba(242,95,124,.1);">
+            <div class="tl-icon"><i class="bi bi-quote"></i></div>
+            <div><div class="tl-name">Citation Tracker</div><div class="tl-sub">Auto-detect references &amp; build citation graphs</div></div>
+            <i class="bi bi-chevron-right tl-arr"></i>
+          </a>
+          <a href="/gap-finder" class="tool-link" style="--tc:var(--a6);--ti-bg:rgba(56,217,245,.1);">
+            <div class="tl-icon"><i class="bi bi-binoculars-fill"></i></div>
+            <div><div class="tl-name">Gap Finder</div><div class="tl-sub">Identify under-researched areas in literature</div></div>
+            <i class="bi bi-chevron-right tl-arr"></i>
+          </a>
+          <a href="/literature" class="tool-link" style="--tc:var(--a2);--ti-bg:rgba(124,92,252,.1);">
+            <div class="tl-icon"><i class="bi bi-file-earmark-richtext-fill"></i></div>
+            <div><div class="tl-name">Literature Review</div><div class="tl-sub">Auto-generate structured academic reviews</div></div>
+            <i class="bi bi-chevron-right tl-arr"></i>
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Last Analysis Insights -->
+    <div class="card">
+      <div class="card-head">
+        <div>
+          <div class="ch-title">
+            <span class="ch-icon" style="background:rgba(247,147,76,.1);color:var(--a4);"><i class="bi bi-lightning-charge-fill"></i></span>
+            Last Analysis Insights
+          </div>
+          <div class="ch-sub">Entities detected · top relation · AI-generated summary</div>
+        </div>
+      </div>
+      <div class="card-body insight-block">
+
+        <div>
+          <div class="ins-head"><i class="bi bi-patch-check-fill" style="color:var(--a1);"></i> Named Entities Detected</div>
+          {% if top_entities %}
+            {% for entity in top_entities %}<span class="e-tag">{{ entity }}</span>{% endfor %}
+          {% else %}
+            <div class="no-data" style="padding:12px;background:var(--surf);border-radius:10px;text-align:center;">
+              <i class="bi bi-inbox" style="display:block;font-size:1.4rem;margin-bottom:6px;opacity:.3;"></i>
+              No entities yet — run your first analysis on the <a href="/map" style="color:var(--a1);">Map page</a>
+            </div>
+          {% endif %}
+        </div>
+
+        <div>
+          <div class="ins-head"><i class="bi bi-signpost-split-fill" style="color:var(--a3);"></i> Most Common Relation</div>
+          {% if top_relation and top_relation != "None" %}
+            <span class="rel-pill"><i class="bi bi-node-plus-fill"></i> {{ top_relation }}</span>
+          {% else %}
+            <span class="no-data">No relations extracted yet — analyze a document first.</span>
+          {% endif %}
+        </div>
+
+        <div>
+          <div class="ins-head"><i class="bi bi-robot" style="color:var(--a4);"></i> Groq AI Summary</div>
+          <div class="summary-box">
+            {% if summary_highlight and summary_highlight != "No summary available" %}
+              {{ summary_highlight }}
+            {% else %}
+              <span class="no-data">No summary yet — analyze a document on the <a href="/map" style="color:var(--a4);">Map page</a> first.</span>
+            {% endif %}
+          </div>
+        </div>
+
+        <!-- Quick NLP education tip -->
+        <div style="background:rgba(79,142,247,.06);border:1px solid rgba(79,142,247,.12);border-radius:12px;padding:14px 16px;">
+          <div class="ins-head" style="margin-bottom:6px;"><i class="bi bi-lightbulb-fill" style="color:var(--a1);"></i> What does this data mean?</div>
+          <div style="font-size:.76rem;color:var(--muted);line-height:1.65;">
+            <strong style="color:#e4e9f7;">Entities</strong> are real-world objects (people, places, organisations) found in text.
+            <strong style="color:#e4e9f7;">Relations</strong> show how they connect (Subject–Verb–Object triples).
+            <strong style="color:#e4e9f7;">Confidence</strong> reflects the AI model's certainty about its predictions.
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ⑥ RECENT HISTORY -->
+  <div class="sec-label"><i class="bi bi-clock-history"></i> Recent Activity</div>
+  <div class="card" style="margin-bottom:20px;">
+    <div class="card-head">
+      <div>
+        <div class="ch-title">
+          <span class="ch-icon" style="background:rgba(255,255,255,.05);color:var(--dim);"><i class="bi bi-clock-history"></i></span>
+          Analysis History
+        </div>
+        <div class="ch-sub">Last 5 documents analyzed on this platform</div>
+      </div>
+      <a href="/history" class="tb-btn" style="font-size:.72rem;padding:5px 12px;"><i class="bi bi-arrow-right"></i> View All</a>
+    </div>
+    <div id="historyFeed" style="padding:0;">
+      <div style="padding:28px;text-align:center;color:var(--ink3);font-size:.8rem;">
+        <i class="bi bi-hourglass" style="display:block;font-size:1.5rem;margin-bottom:10px;opacity:.3;"></i>
+        Loading recent activity…
+      </div>
+    </div>
+  </div>
+
+  <!-- ⑦ EXPORT -->
+  <div class="sec-label"><i class="bi bi-cloud-arrow-down-fill"></i> Export &amp; Download</div>
+  <div class="export-grid" style="margin-bottom:24px;">
+
+    <div class="exp-card" style="--exp-g:var(--g1);--exp-c:var(--a1);--exp-lt:rgba(79,142,247,.1);" onclick="dlMetrics()">
+      <div class="exp-icon"><i class="bi bi-graph-up-arrow"></i></div>
+      <div class="exp-title">Metrics Report</div>
+      <div class="exp-desc">Entities, relations, confidence score &amp; summary word count in one CSV</div>
+      <div class="exp-btn"><i class="bi bi-filetype-csv"></i> metrics.csv</div>
+    </div>
+
+    <div class="exp-card" style="--exp-g:var(--g2);--exp-c:var(--a3);--exp-lt:rgba(0,212,170,.1);" onclick="dlEntities()">
+      <div class="exp-icon"><i class="bi bi-person-lines-fill"></i></div>
+      <div class="exp-title">Named Entities</div>
+      <div class="exp-desc">All extracted named entities from the last document analysis session</div>
+      <div class="exp-btn"><i class="bi bi-filetype-csv"></i> entities.csv</div>
+    </div>
+
+    <div class="exp-card" style="--exp-g:var(--g3);--exp-c:var(--a4);--exp-lt:rgba(247,147,76,.1);" onclick="dlSummary()">
+      <div class="exp-icon"><i class="bi bi-robot"></i></div>
+      <div class="exp-title">AI Summary</div>
+      <div class="exp-desc">Groq LLaMA-generated abstractive summary of the analyzed document</div>
+      <div class="exp-btn"><i class="bi bi-filetype-csv"></i> summary.csv</div>
+    </div>
+
+  </div>
+
+  <!-- ⑧ FOOTER -->
+  <div class="pg-footer">
+    © 2026 <a href="/">GenAI Knowledge Mapper</a> &nbsp;·&nbsp;
+    Built for global research communities &nbsp;·&nbsp;
+    Powered by <strong>spaCy</strong> &amp; <strong>Groq LLaMA-3.3-70b</strong>
+  </div>
+
+</div>
+</main>
+
+<script>
+/* ── Flask data injected ── */
+const totalEntities    = {{ total_entities }};
+const totalRelations   = {{ total_relations }};
+const docsProcessed    = {{ documents_processed }};
+const aiConfidence     = {{ ai_confidence }};
+const avgSummaryLength = {{ avg_summary_length }};
+const topEntities      = {{ top_entities | tojson }};
+const trendDates       = {{ trend_dates    | tojson }};
+const trendEntities    = {{ trend_entities | tojson }};
+const trendRelations   = {{ trend_relations| tojson }};
+
+/* ── Shared chart defaults ── */
+const F  = "'DM Sans', sans-serif";
+const gc = 'rgba(255,255,255,.05)';
+const tc = '#6b7a9e';
+Chart.defaults.font.family = 'DM Sans';
+Chart.defaults.color = tc;
+
+/* ── Chart 1: Horizontal Bar ── */
+new Chart(document.getElementById('barChart'), {
+  type: 'bar',
+  data: {
+    labels: ['Named Entities', 'SVO Relations', 'Documents'],
+    datasets: [{
+      data: [totalEntities, totalRelations, docsProcessed],
+      backgroundColor: ['rgba(79,142,247,.75)', 'rgba(0,212,170,.75)', 'rgba(247,147,76,.75)'],
+      borderRadius: 8, borderSkipped: false,
+      borderColor: ['rgba(79,142,247,1)', 'rgba(0,212,170,1)', 'rgba(247,147,76,1)'],
+      borderWidth: 1
+    }]
+  },
+  options: {
+    indexAxis: 'y', responsive: true,
+    plugins: { legend: { display: false }, tooltip: {
+      backgroundColor: '#1a2035', borderColor: 'rgba(255,255,255,.07)', borderWidth: 1,
+      titleFont: { family: 'Syne', weight: '700' }, bodyFont: { family: 'DM Sans' },
+      callbacks: { label: ctx => '  ' + ctx.parsed.x.toLocaleString() + ' total' }
+    }},
+    scales: {
+      x: { grid: { color: gc }, ticks: { color: tc, font: { size: 11 } }, border: { color: 'transparent' } },
+      y: { grid: { display: false }, ticks: { color: '#c8d0e7', font: { size: 12, weight: '600' } }, border: { color: 'transparent' } }
+    }
+  }
+});
+
+/* ── Chart 2: Doughnut ── */
+const dLabels = topEntities.length ? topEntities.slice(0,8) : ['No data yet'];
+const dData   = topEntities.length ? topEntities.map((_,i) => Math.max(6, totalEntities - i*3)) : [1];
+const dColors = ['#4f8ef7','#7c5cfc','#00d4aa','#f7934c','#f25f7c','#38d9f5','#a78bfa','#34d399'];
+new Chart(document.getElementById('doughnutChart'), {
+  type: 'doughnut',
+  data: { labels: dLabels, datasets: [{ data: dData, backgroundColor: dColors, borderWidth: 3, borderColor: '#0a0f1e', hoverOffset: 10 }] },
+  options: {
+    responsive: true, cutout: '70%',
+    plugins: {
+      legend: { position: 'bottom', labels: { font: { size: 11 }, padding: 10, boxWidth: 10, usePointStyle: true, color: tc }},
+      tooltip: { backgroundColor: '#1a2035', borderColor: 'rgba(255,255,255,.07)', borderWidth: 1 }
+    }
+  }
+});
+
+/* ── Chart 3: Trend Line ── */
+const tLabels = trendDates.length ? trendDates : ['Session 1','Session 2','Session 3','Session 4','Session 5','Now'];
+const tEnt    = trendEntities.length ? trendEntities : [0, Math.round(totalEntities*.2), Math.round(totalEntities*.45), Math.round(totalEntities*.7), Math.round(totalEntities*.9), totalEntities];
+const tRel    = trendRelations.length ? trendRelations : [0, Math.round(totalRelations*.15), Math.round(totalRelations*.4), Math.round(totalRelations*.65), Math.round(totalRelations*.85), totalRelations];
+new Chart(document.getElementById('trendChart'), {
+  type: 'line',
+  data: {
+    labels: tLabels,
+    datasets: [
+      { label: 'Entities', data: tEnt, borderColor: '#4f8ef7', backgroundColor: 'rgba(79,142,247,.08)', borderWidth: 2.5, tension: .4, fill: true, pointBackgroundColor: '#4f8ef7', pointBorderColor: '#0a0f1e', pointBorderWidth: 2, pointRadius: 5 },
+      { label: 'Relations', data: tRel, borderColor: '#00d4aa', backgroundColor: 'rgba(0,212,170,.06)', borderWidth: 2.5, tension: .4, fill: true, pointBackgroundColor: '#00d4aa', pointBorderColor: '#0a0f1e', pointBorderWidth: 2, pointRadius: 5 }
+    ]
+  },
+  options: {
+    responsive: true,
+    plugins: {
+      legend: { position: 'top', align: 'end', labels: { font: { size: 12 }, padding: 16, usePointStyle: true, pointStyleWidth: 10, color: '#9ba5c0' }},
+      tooltip: { backgroundColor: '#1a2035', borderColor: 'rgba(255,255,255,.07)', borderWidth: 1, mode: 'index', intersect: false }
+    },
+    scales: {
+      x: { grid: { color: gc }, ticks: { color: tc, font: { size: 11 } }, border: { color: 'transparent' } },
+      y: { grid: { color: gc }, ticks: { color: tc, font: { size: 11 } }, border: { color: 'transparent' }, beginAtZero: true }
+    },
+    interaction: { mode: 'index', intersect: false }
+  }
+});
+
+/* ── Chart 4: Radar ── */
+const mx = Math.max(totalEntities, totalRelations, aiConfidence, avgSummaryLength, docsProcessed, 1);
+new Chart(document.getElementById('radarChart'), {
+  type: 'radar',
+  data: {
+    labels: ['Entities', 'Relations', 'Confidence', 'Summary Len', 'Doc Count'],
+    datasets: [{
+      label: 'Platform Score',
+      data: [
+        Math.min(Math.round(totalEntities/mx*100),100),
+        Math.min(Math.round(totalRelations/mx*100),100),
+        aiConfidence,
+        Math.min(Math.round(avgSummaryLength/150*100),100),
+        Math.min(docsProcessed*15, 100)
+      ],
+      backgroundColor: 'rgba(124,92,252,.12)',
+      borderColor: 'rgba(124,92,252,.8)',
+      pointBackgroundColor: '#7c5cfc',
+      pointBorderColor: '#0a0f1e', pointBorderWidth: 2,
+      pointRadius: 5, borderWidth: 2
+    }]
+  },
+  options: {
+    responsive: true,
+    plugins: {
+      legend: { display: false },
+      tooltip: { backgroundColor: '#1a2035', borderColor: 'rgba(255,255,255,.07)', borderWidth: 1 }
+    },
+    scales: { r: {
+      min: 0, max: 100,
+      grid: { color: 'rgba(255,255,255,.05)' },
+      angleLines: { color: 'rgba(255,255,255,.04)' },
+      ticks: { display: false },
+      pointLabels: { color: '#9ba5c0', font: { size: 11, family: 'DM Sans' } }
+    }}
+  }
+});
+
+/* ── History Feed ── */
+(async function loadHistory() {
+  const feed = document.getElementById('historyFeed');
+  if (!feed) return;
+  try {
+    const resp = await fetch('/get-history?per_page=5');
+    const data = await resp.json();
+    const items = data.history || [];
+    if (!items.length) {
+      feed.innerHTML = `<div style="padding:32px;text-align:center;color:var(--ink3);font-size:.8rem;">
+        <i class="bi bi-inbox" style="display:block;font-size:1.8rem;margin-bottom:10px;opacity:.25;"></i>
+        <strong style="color:var(--muted);display:block;margin-bottom:5px;">No analysis history yet</strong>
+        Start by analyzing a document on the <a href="/map" style="color:var(--a1);">Map page</a> or uploading a paper on the <a href="/research" style="color:var(--a2);">Research page</a>.
+      </div>`;
+      return;
+    }
+    const icons = { 'Full Paper Analysis': 'bi-mortarboard-fill', 'default': 'bi-share-fill' };
+    const cols  = { 'Full Paper Analysis': 'var(--a2)', 'default': 'var(--a1)' };
+    feed.innerHTML = items.map((h, i) => {
+      const d  = new Date(h.timestamp);
+      const ts = isNaN(d) ? '—' : d.toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'}) + ' · ' + d.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
+      const ico = icons[h.analysis_type] || icons['default'];
+      const col = cols[h.analysis_type]  || cols['default'];
+      const sum = h.summary ? (h.summary.length > 100 ? h.summary.slice(0,100)+'…' : h.summary) : 'No summary available.';
+      const sz  = h.file_size ? Math.round(h.file_size/1024) + ' KB' : '';
+      return `<div class="hist-item">
+        <div class="hist-icon" style="background:${col}18;color:${col};"><i class="bi ${ico}"></i></div>
+        <div class="hist-main">
+          <div class="hist-name">${h.filename || 'Untitled Document'}</div>
+          <div class="hist-meta">${ts}${h.analysis_type ? ' · ' + h.analysis_type : ''}</div>
+          <div class="hist-sum">${sum}</div>
+        </div>
+        <div class="hist-right">${sz}</div>
+      </div>`;
+    }).join('');
+  } catch(e) {
+    feed.innerHTML = '<div style="padding:20px;text-align:center;color:var(--ink3);font-size:.78rem;">Unable to load history. Start an analysis to see results here.</div>';
+  }
+})();
+
+/* ── CSV Export helpers ── */
+function downloadCSV(rows, fn) {
+  const csv = 'data:text/csv;charset=utf-8,' + rows.map(r => r.join(',')).join('\n');
+  const a = document.createElement('a');
+  a.setAttribute('href', encodeURI(csv));
+  a.setAttribute('download', fn);
+  a.click();
+}
+function dlMetrics() {
+  downloadCSV([
+    ['Metric','Value'],
+    ['Total Entities Extracted', totalEntities],
+    ['Total SVO Relations', totalRelations],
+    ['Documents Processed', docsProcessed],
+    ['AI Confidence Score (%)', aiConfidence],
+    ['Avg Summary Length (words)', avgSummaryLength]
+  ], 'metrics.csv');
+}
+function dlEntities() {
+  downloadCSV([['Entity'], ...topEntities.map(e=>[e])], 'entities.csv');
+}
+function dlSummary() {
+  const s = {{ summary_highlight | tojson }};
+  downloadCSV([['Summary'], [s]], 'summary.csv');
+}
+
+/* ── Counter animation ── */
+function animateCount(el, target) {
+  if (!el || !target) return;
+  let start = 0;
+  const step = Math.ceil(target / 40);
+  const timer = setInterval(() => {
+    start = Math.min(start + step, target);
+    el.textContent = start.toLocaleString();
+    if (start >= target) clearInterval(timer);
+  }, 30);
+}
+animateCount(document.getElementById('v1'), totalEntities);
+animateCount(document.getElementById('v2'), totalRelations);
+animateCount(document.getElementById('v3'), docsProcessed);
+animateCount(document.getElementById('v5'), avgSummaryLength);
+</script>
+</body>
+</html>
