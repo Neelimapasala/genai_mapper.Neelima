@@ -1,0 +1,2437 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Research Paper Analyzer — GenAI Knowledge Mapper</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    :root{--bg:#080c18;--glass:rgba(15,20,40,0.75);--glass2:rgba(255,255,255,0.04);--bd:rgba(255,255,255,0.09);--accent:#6366f1;--accent2:#8b5cf6;--green:#10b981;--amber:#f59e0b;--rose:#f43f5e;--cyan:#06b6d4;--t1:#f1f5f9;--t2:#94a3b8;--t3:#475569;--r:14px;--rl:18px;}
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+    html{scroll-behavior:smooth;}
+    body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--t1);font-size:14px;line-height:1.6;overflow-x:hidden;-webkit-font-smoothing:antialiased;}
+    body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;background:radial-gradient(ellipse 75% 50% at 5% 0%,rgba(99,102,241,.15) 0%,transparent 60%),radial-gradient(ellipse 55% 45% at 95% 5%,rgba(139,92,246,.11) 0%,transparent 55%),radial-gradient(ellipse 60% 40% at 50% 100%,rgba(6,182,212,.07) 0%,transparent 55%);}
+    body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;background-image:linear-gradient(rgba(255,255,255,.012) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.012) 1px,transparent 1px);background-size:48px 48px;}
+    ::-webkit-scrollbar{width:5px;}::-webkit-scrollbar-track{background:transparent;}::-webkit-scrollbar-thumb{background:rgba(255,255,255,.12);border-radius:3px;}
+    a{text-decoration:none;color:inherit;}
+
+    /* NAVBAR */
+    .topnav{position:sticky;top:0;z-index:300;background:rgba(8,12,24,.9);backdrop-filter:blur(20px);border-bottom:1px solid var(--bd);}
+    .tnav-inner{max-width:1700px;margin:0 auto;padding:0 28px;height:60px;display:flex;align-items:center;gap:20px;}
+    .brand{font-size:1rem;font-weight:800;letter-spacing:-.03em;color:var(--t1);text-decoration:none;display:flex;align-items:center;gap:8px;flex-shrink:0;}
+    .brand-mark{width:30px;height:30px;background:linear-gradient(135deg,var(--accent),var(--accent2));border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:.88rem;box-shadow:0 0 14px rgba(99,102,241,.45);}
+    .nav-links{display:flex;align-items:center;gap:2px;list-style:none;margin-left:10px;}
+    .nav-links a{padding:6px 12px;border-radius:8px;font-size:.82rem;font-weight:500;color:var(--t2);transition:all .2s;display:flex;align-items:center;gap:5px;}
+    .nav-links a:hover{color:var(--t1);background:var(--glass2);}
+    .nav-links a.active{color:var(--accent);background:rgba(99,102,241,.12);}
+    .nav-links .has-drop{position:relative;}
+    .drop-menu{position:absolute;top:calc(100% + 8px);left:0;background:#14141f;border:1px solid var(--bd);border-radius:var(--r);padding:6px;min-width:210px;display:none;box-shadow:0 24px 60px rgba(0,0,0,.6);}
+    .nav-links .has-drop:hover .drop-menu{display:block;}
+    .drop-menu a{display:flex;align-items:center;gap:8px;padding:8px 12px;border-radius:8px;font-size:.81rem;color:var(--t2);}
+    .drop-menu a:hover{color:var(--t1);background:rgba(255,255,255,.05);}
+    .drop-menu hr{border-color:var(--bd);margin:4px 0;}
+    .ml-auto{margin-left:auto;}
+    .btn-cta{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;border:none;padding:8px 18px;border-radius:50px;font-size:.8rem;font-weight:600;cursor:pointer;text-decoration:none;display:flex;align-items:center;gap:6px;transition:all .2s;}
+    .btn-cta:hover{transform:translateY(-1px);color:#fff;}
+
+    /* LAYOUT */
+    .page-wrap{position:relative;z-index:1;max-width:1200px;margin:0 auto;padding:28px;display:flex;flex-direction:column;gap:0;}
+    .main-col{display:flex;flex-direction:column;gap:20px;width:100%;}
+
+    /* CARD */
+    .card{background:var(--glass);border:1px solid var(--bd);border-radius:var(--rl);backdrop-filter:blur(16px);box-shadow:0 8px 30px rgba(0,0,0,.5);overflow:hidden;transition:border-color .3s;}
+    .card:hover{border-color:rgba(99,102,241,.2);}
+    .card-header{padding:16px 22px;border-bottom:1px solid var(--bd);display:flex;align-items:center;justify-content:space-between;background:rgba(255,255,255,.02);}
+    .card-title{font-size:.92rem;font-weight:700;color:var(--t1);display:flex;align-items:center;gap:10px;margin:0;}
+    .ti{width:32px;height:32px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:1rem;flex-shrink:0;}
+    .ti-indigo{background:linear-gradient(135deg,rgba(99,102,241,.3),rgba(139,92,246,.3));color:#a78bfa;}
+    .ti-green{background:linear-gradient(135deg,rgba(16,185,129,.25),rgba(5,150,105,.25));color:#34d399;}
+    .ti-amber{background:linear-gradient(135deg,rgba(245,158,11,.25),rgba(217,119,6,.25));color:#fbbf24;}
+    .ti-cyan{background:linear-gradient(135deg,rgba(6,182,212,.25),rgba(56,189,248,.25));color:#38bdf8;}
+    .card-tag{font-size:.6rem;font-weight:700;padding:3px 10px;border-radius:20px;text-transform:uppercase;letter-spacing:.1em;}
+    .tag-indigo{background:rgba(99,102,241,.15);color:#a78bfa;border:1px solid rgba(99,102,241,.3);}
+    .tag-green{background:rgba(16,185,129,.15);color:#34d399;border:1px solid rgba(16,185,129,.3);}
+    .tag-amber{background:rgba(245,158,11,.15);color:#fbbf24;border:1px solid rgba(245,158,11,.3);}
+    .card-body{padding:22px;}
+    .card-footer{padding:10px 22px;border-top:1px solid var(--bd);font-size:.75rem;color:var(--t3);background:rgba(0,0,0,.15);display:flex;align-items:center;gap:6px;}
+
+    /* HERO */
+    .hero{background:linear-gradient(135deg,rgba(99,102,241,.18) 0%,rgba(139,92,246,.12) 50%,rgba(6,182,212,.07) 100%);border:1px solid rgba(99,102,241,.22);border-radius:var(--rl);padding:30px 28px;position:relative;overflow:hidden;}
+    .hero::before{content:'';position:absolute;top:-60px;right:-60px;width:240px;height:240px;background:radial-gradient(circle,rgba(99,102,241,.18) 0%,transparent 70%);pointer-events:none;}
+    .hero-top{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-wrap:wrap;}
+    .hero-badge{display:inline-flex;align-items:center;gap:6px;background:rgba(99,102,241,.15);border:1px solid rgba(99,102,241,.3);border-radius:20px;padding:4px 12px;font-size:.7rem;font-weight:700;color:#a78bfa;text-transform:uppercase;letter-spacing:.1em;margin-bottom:10px;}
+    .hero-badge::before{content:'';width:6px;height:6px;border-radius:50%;background:#a78bfa;animation:pdot 2s ease-in-out infinite;}
+    @keyframes pdot{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(.8)}}
+    .hero-title{font-size:1.75rem;font-weight:900;letter-spacing:-.04em;color:var(--t1);line-height:1.1;margin:0 0 8px;}
+    .hero-title span{background:linear-gradient(135deg,#a78bfa,#60a5fa);-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+    .hero-sub{font-size:.88rem;color:var(--t2);margin:0;}
+    .hero-actions{display:flex;gap:8px;flex-shrink:0;}
+    .btn-ghost{background:var(--glass2);border:1px solid var(--bd);color:var(--t2);padding:7px 14px;border-radius:9px;font-size:.8rem;font-weight:600;cursor:pointer;text-decoration:none;display:flex;align-items:center;gap:6px;transition:all .2s;}
+    .btn-ghost:hover{background:rgba(255,255,255,.07);border-color:rgba(255,255,255,.15);color:var(--t1);}
+    .stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:20px;}
+    .stat-item{background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.06);border-radius:var(--r);padding:14px;display:flex;align-items:center;gap:10px;transition:all .2s;}
+    .stat-item:hover{background:rgba(99,102,241,.09);border-color:rgba(99,102,241,.22);transform:translateY(-2px);}
+    .stat-ico{width:34px;height:34px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:1rem;flex-shrink:0;}
+    .stat-num{font-size:1.45rem;font-weight:800;letter-spacing:-.04em;line-height:1;}
+    .stat-lbl{font-size:.62rem;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--t3);margin-top:2px;}
+
+    /* UPLOAD */
+    .upload-zone{border:2px dashed rgba(99,102,241,.3);border-radius:var(--r);background:rgba(99,102,241,.04);padding:28px 20px;text-align:center;cursor:pointer;transition:all .25s;margin-bottom:14px;}
+    .upload-zone:hover,.upload-zone.drag{border-color:rgba(99,102,241,.7);background:rgba(99,102,241,.08);}
+    .upload-zone.has-file{border-color:rgba(16,185,129,.5);background:rgba(16,185,129,.05);}
+    .upload-icon{font-size:2rem;display:block;margin-bottom:8px;color:var(--accent);}
+    .upload-title{font-weight:700;font-size:.9rem;color:var(--t1);margin-bottom:4px;}
+    .upload-desc{font-size:.78rem;color:var(--t2);}
+    .form-ctrl{width:100%;background:rgba(255,255,255,.04);border:1px solid var(--bd);border-radius:var(--r);padding:10px 14px;font-size:.85rem;font-family:'Inter',sans-serif;color:var(--t1);transition:all .2s;outline:none;}
+    .form-ctrl::placeholder{color:var(--t3);}
+    .form-ctrl:focus{border-color:rgba(99,102,241,.5);box-shadow:0 0 0 3px rgba(99,102,241,.1);}
+    .form-label{font-size:.78rem;font-weight:600;color:var(--t2);margin-bottom:6px;display:block;}
+    .btn-primary{background:linear-gradient(135deg,var(--accent),var(--accent2));border:none;border-radius:var(--r);padding:12px 24px;font-size:.88rem;font-weight:700;color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:all .25s;box-shadow:0 4px 20px rgba(99,102,241,.4);width:100%;margin-top:12px;}
+    .btn-primary:hover{transform:translateY(-2px);box-shadow:0 8px 30px rgba(99,102,241,.55);}
+    .btn-primary:disabled{opacity:.6;cursor:not-allowed;transform:none;}
+    .row-2{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px;}
+
+    /* TABS */
+    .tab-nav{display:flex;gap:4px;padding:12px 22px 0;background:rgba(255,255,255,.015);border-bottom:1px solid var(--bd);overflow-x:auto;}
+    .tab-btn{padding:9px 14px;border-radius:9px 9px 0 0;cursor:pointer;font-weight:600;font-size:.79rem;background:transparent;border:none;color:var(--t3);transition:all .2s;display:flex;align-items:center;gap:6px;white-space:nowrap;border-bottom:2px solid transparent;outline:none;}
+    .tab-btn:hover{color:var(--t2);}
+    .tab-btn.active{color:#a78bfa;border-bottom-color:#a78bfa;background:rgba(99,102,241,.08);}
+    .tab-pane{display:none;padding:22px;}
+    .tab-pane.active{display:block;}
+
+    /* SECTIONS ACCORDION */
+    .sections-grid{display:flex;flex-direction:column;gap:12px;}
+    .sec-card{background:rgba(255,255,255,.03);border:1px solid var(--bd);border-radius:var(--r);overflow:hidden;transition:border-color .2s;}
+    .sec-card.present:hover{border-color:rgba(99,102,241,.3);}
+    .sec-card.absent{opacity:.55;}
+    .sec-head{padding:12px 16px;display:flex;align-items:center;gap:10px;cursor:pointer;user-select:none;}
+    .sec-head:hover{background:rgba(255,255,255,.02);}
+    .sec-icon{width:30px;height:30px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:.9rem;flex-shrink:0;}
+    .sc-abstract{background:rgba(99,102,241,.15);color:#a78bfa;}
+    .sc-introduction{background:rgba(6,182,212,.15);color:#38bdf8;}
+    .sc-literature{background:rgba(245,158,11,.15);color:#fbbf24;}
+    .sc-methodology{background:rgba(16,185,129,.15);color:#34d399;}
+    .sc-results{background:rgba(139,92,246,.15);color:#c4b5fd;}
+    .sc-discussion{background:rgba(244,63,94,.15);color:#fb7185;}
+    .sc-conclusion{background:rgba(56,189,248,.15);color:#7dd3fc;}
+    .sec-name{font-size:.88rem;font-weight:700;color:var(--t1);flex:1;}
+    .sec-status{font-size:.63rem;font-weight:700;padding:2px 8px;border-radius:20px;text-transform:uppercase;letter-spacing:.07em;}
+    .ss-found{background:rgba(16,185,129,.12);color:#34d399;border:1px solid rgba(16,185,129,.25);}
+    .ss-miss{background:rgba(244,63,94,.1);color:#fb7185;border:1px solid rgba(244,63,94,.2);}
+    .sec-chev{color:var(--t3);font-size:.8rem;transition:transform .2s;}
+    .sec-card.open .sec-chev{transform:rotate(180deg);}
+    .sec-body{display:none;padding:14px 16px 16px;border-top:1px solid var(--bd);}
+    .sec-card.open .sec-body{display:block;}
+    .sec-content-txt{font-size:.85rem;line-height:1.78;color:var(--t2);margin-bottom:12px;}
+    .sec-ai{background:rgba(99,102,241,.08);border:1px solid rgba(99,102,241,.18);border-left:3px solid var(--accent);border-radius:9px;padding:10px 14px;}
+    .sec-ai-lbl{font-size:.63rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:#a78bfa;margin-bottom:5px;display:flex;align-items:center;gap:5px;}
+    .sec-ai-txt{font-size:.83rem;color:var(--t2);line-height:1.7;font-style:italic;}
+
+    /* ENTITY BADGES */
+    .entity-badge{display:inline-flex;align-items:center;gap:4px;margin:3px;padding:5px 11px;border-radius:20px;font-size:.78rem;font-weight:600;border:1px solid;}
+    .bp{background:rgba(16,185,129,.12);color:#34d399;border-color:rgba(16,185,129,.3);}
+    .bo{background:rgba(99,102,241,.12);color:#a78bfa;border-color:rgba(99,102,241,.3);}
+    .bg{background:rgba(245,158,11,.12);color:#fbbf24;border-color:rgba(245,158,11,.3);}
+    .bd2{background:rgba(139,92,246,.12);color:#c4b5fd;border-color:rgba(139,92,246,.3);}
+    .bl{background:rgba(244,63,94,.12);color:#fb7185;border-color:rgba(244,63,94,.3);}
+    .bm{background:rgba(6,182,212,.12);color:#38bdf8;border-color:rgba(6,182,212,.3);}
+    .bx{background:rgba(255,255,255,.06);color:var(--t2);border-color:var(--bd);}
+
+    /* KEYWORDS */
+    .kw-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:8px;margin-top:10px;}
+    .kw-item{background:rgba(255,255,255,.035);border:1px solid var(--bd);border-radius:9px;padding:9px;text-align:center;transition:all .2s;}
+    .kw-item:hover{background:rgba(99,102,241,.08);border-color:rgba(99,102,241,.25);}
+    .kw-name{font-weight:700;font-size:.85rem;color:var(--t1);}
+    .kw-freq{font-size:.68rem;color:var(--accent);font-weight:700;margin-top:3px;}
+
+    /* TABLE */
+    .scroll-tbl{max-height:380px;overflow-y:auto;border:1px solid var(--bd);border-radius:var(--r);}
+    .data-table{width:100%;font-size:.83rem;border-collapse:collapse;}
+    .data-table thead th{background:rgba(255,255,255,.03);border-bottom:1px solid var(--bd);font-weight:700;color:var(--t3);padding:9px 13px;text-align:left;font-size:.7rem;text-transform:uppercase;letter-spacing:.08em;position:sticky;top:0;}
+    .data-table tbody td{padding:9px 13px;border-bottom:1px solid rgba(255,255,255,.03);color:var(--t2);}
+    .data-table tbody tr:hover td{background:rgba(255,255,255,.025);}
+    .data-table tbody tr:last-child td{border-bottom:none;}
+    .bdg-a{background:rgba(245,158,11,.12);color:#fbbf24;border:1px solid rgba(245,158,11,.25);padding:2px 8px;border-radius:20px;font-size:.7rem;font-weight:700;font-family:'JetBrains Mono',monospace;}
+    .bdg-g{background:rgba(255,255,255,.06);color:var(--t2);border:1px solid var(--bd);padding:2px 7px;border-radius:5px;font-size:.68rem;font-weight:700;}
+
+    /* TEXT BOXES */
+    .summary-box{background:rgba(99,102,241,.08);border:1px solid rgba(99,102,241,.2);border-left:3px solid var(--accent);border-radius:var(--r);padding:16px 18px;font-size:.9rem;line-height:1.8;color:var(--t2);}
+    /* AI Summary Improvement Panel */
+    .aisec-open .ai-chev{transform:rotate(180deg);}
+
+    .abstract-box{background:rgba(255,255,255,.03);border:1px solid var(--bd);border-radius:var(--r);padding:16px 18px;font-size:.88rem;line-height:1.78;color:var(--t2);font-style:italic;}
+
+    /* SUGGESTED PAPERS */
+    .sug-list{display:flex;flex-direction:column;gap:12px;}
+    .sug-card{background:rgba(255,255,255,.03);border:1px solid var(--bd);border-radius:var(--r);padding:16px 18px;transition:all .2s;position:relative;overflow:hidden;}
+    .sug-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--accent),var(--accent2));transform:scaleX(0);transform-origin:left;transition:transform .3s;}
+    .sug-card:hover{border-color:rgba(99,102,241,.3);transform:translateX(3px);}
+    .sug-card:hover::before{transform:scaleX(1);}
+    .sug-title{font-size:.88rem;font-weight:700;color:var(--t1);margin-bottom:4px;}
+    .sug-meta{font-size:.74rem;color:var(--t3);margin-bottom:8px;}
+    .sug-rel{font-size:.8rem;color:var(--t2);line-height:1.65;}
+    .sug-topic{display:inline-flex;align-items:center;gap:4px;background:rgba(99,102,241,.1);border:1px solid rgba(99,102,241,.2);border-radius:20px;padding:2px 9px;font-size:.67rem;font-weight:700;color:#a78bfa;margin-top:7px;}
+
+    /* EXPORT */
+    .exp-row{display:flex;gap:10px;flex-wrap:wrap;}
+    .exp-btn{border-radius:9px;padding:10px 16px;font-weight:700;font-size:.8rem;cursor:pointer;display:flex;align-items:center;gap:6px;transition:all .2s;border:1px solid;}
+    .eb-blue{background:rgba(99,102,241,.1);border-color:rgba(99,102,241,.25);color:#a78bfa;} .eb-blue:hover{background:rgba(99,102,241,.18);}
+    .eb-green{background:rgba(16,185,129,.1);border-color:rgba(16,185,129,.25);color:#34d399;} .eb-green:hover{background:rgba(16,185,129,.18);}
+    .eb-amber{background:rgba(245,158,11,.1);border-color:rgba(245,158,11,.25);color:#fbbf24;} .eb-amber:hover{background:rgba(245,158,11,.18);}
+
+    /* EMPTY */
+    .empty-state{text-align:center;padding:44px 24px;display:flex;flex-direction:column;align-items:center;gap:12px;}
+    .empty-ico{width:60px;height:60px;background:rgba(99,102,241,.09);border:1px solid rgba(99,102,241,.2);border-radius:16px;display:flex;align-items:center;justify-content:center;font-size:1.8rem;color:rgba(99,102,241,.5);}
+    .empty-state h3{font-size:.96rem;font-weight:700;color:var(--t1);margin:0;}
+    .empty-state p{font-size:.83rem;color:var(--t2);max-width:380px;margin:0;line-height:1.65;}
+
+    /* ── LEXIS FLOATING ASSISTANT ── */
+    /* Trigger button */
+    .lexis-trigger {
+      position: fixed;
+      bottom: 28px; right: 28px;
+      z-index: 1000;
+      display: flex; align-items: center; gap: 10px;
+      background: linear-gradient(135deg, #6366f1, #8b5cf6);
+      border: none; border-radius: 50px;
+      padding: 12px 20px 12px 14px;
+      cursor: pointer;
+      box-shadow: 0 8px 30px rgba(99,102,241,.55), 0 0 0 1px rgba(99,102,241,.3);
+      transition: all .25s;
+      color: #fff;
+      font-family: 'Inter', sans-serif;
+    }
+    .lexis-trigger:hover {
+      transform: translateY(-3px) scale(1.03);
+      box-shadow: 0 14px 40px rgba(99,102,241,.7), 0 0 0 1px rgba(99,102,241,.5);
+    }
+    .lexis-trigger-avatar {
+      width: 34px; height: 34px;
+      background: rgba(255,255,255,.18);
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.1rem; flex-shrink: 0;
+      position: relative;
+    }
+    .lexis-online {
+      position: absolute; bottom: 0; right: 0;
+      width: 9px; height: 9px;
+      background: #10b981; border-radius: 50%;
+      border: 2px solid #6366f1;
+      box-shadow: 0 0 6px #10b981;
+      animation: pdot 2s ease-in-out infinite;
+    }
+    .lexis-trigger-text { text-align: left; }
+    .lexis-trigger-name { font-size: .82rem; font-weight: 800; letter-spacing: -.01em; }
+    .lexis-trigger-hint { font-size: .66rem; opacity: .75; margin-top: 1px; }
+    .lexis-chevron { font-size: .8rem; opacity: .7; margin-left: 2px; transition: transform .3s; }
+    .lexis-trigger.open .lexis-chevron { transform: rotate(180deg); }
+
+    /* Notification badge */
+    .lexis-badge {
+      position: absolute; top: -4px; right: -4px;
+      width: 16px; height: 16px;
+      background: var(--rose); border-radius: 50%;
+      font-size: .6rem; font-weight: 800; color: #fff;
+      display: flex; align-items: center; justify-content: center;
+      border: 2px solid var(--bg);
+      animation: badgepop .3s ease;
+    }
+    @keyframes badgepop { from{transform:scale(0)} to{transform:scale(1)} }
+
+    /* Backdrop */
+    .lexis-backdrop {
+      position: fixed; inset: 0; z-index: 998;
+      background: rgba(0,0,0,.45);
+      backdrop-filter: blur(3px);
+      opacity: 0; pointer-events: none;
+      transition: opacity .3s;
+    }
+    .lexis-backdrop.visible { opacity: 1; pointer-events: all; }
+
+    /* Bottom sheet panel */
+    .lexis-panel {
+      position: fixed;
+      bottom: 0; left: 0; right: 0;
+      z-index: 999;
+      background: #0d0d1a;
+      border: 1px solid rgba(99,102,241,.25);
+      border-bottom: none;
+      border-radius: 24px 24px 0 0;
+      height: 76vh;
+      display: flex; flex-direction: column;
+      transform: translateY(100%);
+      transition: transform .38s cubic-bezier(.32,.72,0,1);
+      box-shadow: 0 -20px 80px rgba(0,0,0,.7), 0 0 0 1px rgba(99,102,241,.15);
+      overflow: hidden;
+    }
+    .lexis-panel.open { transform: translateY(0); }
+
+    /* Drag handle */
+    .lexis-handle-wrap {
+      display: flex; align-items: center; justify-content: center;
+      padding: 10px 0 2px; cursor: grab; flex-shrink: 0;
+    }
+    .lexis-handle {
+      width: 40px; height: 4px;
+      background: rgba(255,255,255,.18); border-radius: 2px;
+    }
+
+    /* Panel header */
+    .lexis-header {
+      padding: 6px 20px 14px;
+      display: flex; align-items: center; gap: 14px;
+      border-bottom: 1px solid rgba(255,255,255,.07);
+      flex-shrink: 0;
+    }
+    .lexis-avatar {
+      width: 44px; height: 44px;
+      background: linear-gradient(135deg,#6366f1,#8b5cf6);
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.3rem; flex-shrink: 0;
+      box-shadow: 0 0 20px rgba(99,102,241,.5);
+      position: relative;
+    }
+    .lexis-avatar-dot {
+      position: absolute; bottom: 1px; right: 1px;
+      width: 11px; height: 11px;
+      background: #10b981; border-radius: 50%;
+      border: 2px solid #0d0d1a;
+      box-shadow: 0 0 7px #10b981;
+      animation: pdot 2s ease-in-out infinite;
+    }
+    .lexis-name { font-size: 1rem; font-weight: 800; color: #f1f5f9; letter-spacing: -.02em; }
+    .lexis-title { font-size: .72rem; color: rgba(196,181,253,.75); margin-top: 1px; }
+    .lexis-status {
+      margin-left: auto;
+      display: flex; align-items: center; gap: 5px;
+      font-size: .7rem; color: #34d399; font-weight: 600;
+    }
+    .lexis-status::before { content: ''; width: 6px; height: 6px; background: #10b981; border-radius: 50%; box-shadow: 0 0 5px #10b981; }
+    .lexis-close {
+      width: 28px; height: 28px;
+      background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.09);
+      border-radius: 50%; cursor: pointer; color: var(--t2);
+      display: flex; align-items: center; justify-content: center;
+      font-size: .85rem; transition: all .2s;
+    }
+    .lexis-close:hover { background: rgba(244,63,94,.15); color: #fb7185; border-color: rgba(244,63,94,.3); }
+
+    /* Quick chips */
+    .lexis-chips {
+      padding: 10px 18px;
+      display: flex; gap: 7px; flex-wrap: nowrap; overflow-x: auto;
+      border-bottom: 1px solid rgba(255,255,255,.05);
+      flex-shrink: 0;
+    }
+    .lexis-chips::-webkit-scrollbar { display: none; }
+    .lexis-chip {
+      background: rgba(99,102,241,.1); border: 1px solid rgba(99,102,241,.2);
+      border-radius: 20px; padding: 5px 12px;
+      font-size: .72rem; font-weight: 600; color: #a5b4fc;
+      cursor: pointer; white-space: nowrap; transition: all .2s;
+      flex-shrink: 0;
+    }
+    .lexis-chip:hover { background: rgba(99,102,241,.22); border-color: rgba(99,102,241,.4); color: #fff; }
+
+    /* Messages */
+    .lexis-msgs {
+      flex: 1; overflow-y: auto; padding: 14px 18px;
+      display: flex; flex-direction: column; gap: 12px;
+    }
+    .lexis-msgs::-webkit-scrollbar { width: 4px; }
+    .lexis-msgs::-webkit-scrollbar-thumb { background: rgba(255,255,255,.1); border-radius: 2px; }
+
+    .lmsg-wrap { display: flex; align-items: flex-end; gap: 8px; }
+    .lmsg-wrap.user { flex-direction: row-reverse; }
+    .lmsg-ico {
+      width: 26px; height: 26px; flex-shrink: 0;
+      border-radius: 50%; display: flex; align-items: center; justify-content: center;
+      font-size: .75rem;
+    }
+    .lmsg-ico.ai { background: linear-gradient(135deg,#6366f1,#8b5cf6); }
+    .lmsg-ico.user { background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.1); }
+    .lmsg-bubble {
+      max-width: 72%; padding: 10px 14px;
+      font-size: .82rem; line-height: 1.6; word-wrap: break-word;
+      border-radius: 16px;
+    }
+    .lmsg-bubble.ai {
+      background: rgba(255,255,255,.05);
+      border: 1px solid rgba(255,255,255,.08);
+      color: #94a3b8;
+      border-radius: 4px 16px 16px 16px;
+    }
+    .lmsg-bubble.user {
+      background: linear-gradient(135deg,rgba(99,102,241,.35),rgba(139,92,246,.28));
+      border: 1px solid rgba(99,102,241,.35);
+      color: #f1f5f9;
+      border-radius: 16px 4px 16px 16px;
+    }
+    .lmsg-time { font-size: .62rem; color: var(--t3); margin-top: 3px; padding: 0 4px; }
+
+    /* Typing indicator */
+    .ltyping { display: flex; align-items: center; gap: 4px; padding: 10px 14px; }
+    .ltyping-dot {
+      width: 7px; height: 7px; border-radius: 50%;
+      background: #6366f1; opacity: .4;
+      animation: lbounce 1.2s ease-in-out infinite;
+    }
+    .ltyping-dot:nth-child(2) { animation-delay: .15s; }
+    .ltyping-dot:nth-child(3) { animation-delay: .3s; }
+    @keyframes lbounce { 0%,60%,100%{transform:translateY(0);opacity:.4} 30%{transform:translateY(-6px);opacity:1} }
+
+    /* Input area */
+    .lexis-input-area {
+      padding: 12px 18px 16px;
+      border-top: 1px solid rgba(255,255,255,.06);
+      background: rgba(0,0,0,.2);
+      flex-shrink: 0;
+    }
+    .lexis-input-row {
+      display: flex; align-items: center; gap: 10px;
+      background: rgba(255,255,255,.05);
+      border: 1px solid rgba(255,255,255,.09);
+      border-radius: 50px;
+      padding: 6px 6px 6px 16px;
+      transition: border-color .2s;
+    }
+    .lexis-input-row:focus-within { border-color: rgba(99,102,241,.5); box-shadow: 0 0 0 3px rgba(99,102,241,.08); }
+    .lexis-input-row input {
+      flex: 1; background: transparent; border: none; outline: none;
+      font-size: .83rem; color: #f1f5f9; font-family: 'Inter', sans-serif;
+    }
+    .lexis-input-row input::placeholder { color: rgba(255,255,255,.28); }
+    .lexis-send {
+      width: 32px; height: 32px;
+      background: linear-gradient(135deg, #6366f1, #8b5cf6);
+      border: none; border-radius: 50%; color: #fff;
+      font-size: .82rem; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: all .2s; flex-shrink: 0;
+    }
+    .lexis-send:hover { transform: scale(1.1); box-shadow: 0 0 14px rgba(99,102,241,.5); }
+    .lexis-send:disabled { opacity: .5; cursor: not-allowed; transform: none; }
+    .lexis-footer-note { font-size: .65rem; color: rgba(255,255,255,.18); text-align: center; margin-top: 7px; }
+
+    .ldot{display:inline-block;width:5px;height:5px;background:currentColor;border-radius:50%;animation:ldot 1.4s ease-in-out infinite;margin-left:2px;}
+    @keyframes ldot{0%,80%,100%{opacity:.2;transform:scale(.8)}40%{opacity:1;transform:scale(1)}}
+
+    /* SECTION STRENGTH */
+    .strength-bar-wrap{margin-top:10px;}
+    .strength-bar-label{display:flex;justify-content:space-between;align-items:center;margin-bottom:5px;}
+    .strength-bar-name{font-size:.72rem;font-weight:600;color:var(--t2);}
+    .strength-bar-pct{font-size:.72rem;font-weight:700;}
+    .strength-bar-track{height:6px;background:rgba(255,255,255,.07);border-radius:3px;overflow:hidden;}
+    .strength-bar-fill{height:100%;border-radius:3px;transition:width .8s cubic-bezier(.4,0,.2,1);}
+    .str-strong .strength-bar-fill{background:linear-gradient(90deg,#10b981,#34d399);}
+    .str-moderate .strength-bar-fill{background:linear-gradient(90deg,#f59e0b,#fbbf24);}
+    .str-weak .strength-bar-fill{background:linear-gradient(90deg,#f43f5e,#fb7185);}
+    .str-missing .strength-bar-fill{background:rgba(255,255,255,.1);}
+    .strength-badge{font-size:.6rem;font-weight:700;padding:2px 8px;border-radius:20px;text-transform:uppercase;letter-spacing:.07em;margin-left:8px;}
+    .sb-strong{background:rgba(16,185,129,.15);color:#34d399;border:1px solid rgba(16,185,129,.25);}
+    .sb-moderate{background:rgba(245,158,11,.15);color:#fbbf24;border:1px solid rgba(245,158,11,.25);}
+    .sb-weak{background:rgba(244,63,94,.15);color:#fb7185;border:1px solid rgba(244,63,94,.25);}
+    .sb-missing{background:rgba(255,255,255,.06);color:var(--t3);border:1px solid var(--bd);}
+    /* IMPROVEMENT ACTION STEPS (icon step cards) */
+    .improvement-box{border-radius:12px;padding:14px 16px;margin-top:12px;}
+    .improvement-box.missing{background:rgba(244,63,94,.06);border:1px solid rgba(244,63,94,.22);}
+    .improvement-box:not(.missing){background:rgba(245,158,11,.06);border:1px solid rgba(245,158,11,.2);}
+    .improvement-lbl{font-size:.72rem;font-weight:800;text-transform:uppercase;letter-spacing:.09em;margin-bottom:14px;display:flex;align-items:center;gap:8px;}
+    .improvement-box.missing .improvement-lbl{color:#fb7185;}
+    .improvement-box:not(.missing) .improvement-lbl{color:#fbbf24;}
+    .improvement-actions{display:flex;flex-direction:column;gap:0;}
+    .imp-action{display:flex;align-items:flex-start;gap:12px;position:relative;padding-bottom:13px;}
+    .imp-action:last-child{padding-bottom:0;}
+    .imp-action:not(:last-child)::before{content:'';position:absolute;left:15px;top:32px;bottom:0;width:1px;background:rgba(255,255,255,.07);}
+    .imp-icon{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.82rem;flex-shrink:0;position:relative;z-index:1;border:1px solid rgba(255,255,255,.08);}
+    .imp-icon.rose{background:rgba(244,63,94,.18);color:#fb7185;}
+    .imp-icon.amber{background:rgba(245,158,11,.18);color:#fbbf24;}
+    .imp-icon.cyan{background:rgba(6,182,212,.18);color:#38bdf8;}
+    .imp-icon.green{background:rgba(16,185,129,.18);color:#34d399;}
+    .imp-icon.violet{background:rgba(139,92,246,.18);color:#c4b5fd;}
+    .imp-icon.indigo{background:rgba(99,102,241,.18);color:#a78bfa;}
+    .imp-action-text{flex:1;padding-top:4px;}
+    .imp-action-title{font-size:.82rem;font-weight:700;color:var(--t1);margin-bottom:3px;}
+    .imp-action-desc{font-size:.77rem;color:var(--t2);line-height:1.65;}
+    .sec-ai-enhanced{background:rgba(99,102,241,.08);border:1px solid rgba(99,102,241,.18);border-left:3px solid var(--accent);border-radius:9px;padding:12px 14px;margin-top:10px;}
+    .sec-ai-point{display:flex;gap:8px;margin-bottom:8px;font-size:.83rem;color:var(--t2);line-height:1.65;}
+    .sec-ai-point:last-child{margin-bottom:0;}
+    .sec-ai-dot{width:6px;height:6px;border-radius:50%;background:#a78bfa;flex-shrink:0;margin-top:7px;}
+
+    /* PAPER PREVIEW */
+    .paper-preview-wrap{background:rgba(255,255,255,.02);border:1px solid var(--bd);border-radius:var(--r);overflow:hidden;}
+    .paper-preview-toolbar{padding:10px 16px;background:rgba(255,255,255,.03);border-bottom:1px solid var(--bd);display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+    .pp-filename{font-size:.82rem;font-weight:700;color:var(--t1);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+    .pp-meta{font-size:.72rem;color:var(--t3);}
+    .btn-dl{background:linear-gradient(135deg,rgba(16,185,129,.2),rgba(5,150,105,.2));border:1px solid rgba(16,185,129,.3);color:#34d399;border-radius:9px;padding:7px 16px;font-size:.8rem;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;transition:all .2s;text-decoration:none;}
+    .btn-dl:hover{background:linear-gradient(135deg,rgba(16,185,129,.32),rgba(5,150,105,.3));color:#34d399;}
+    .paper-embed{width:100%;height:620px;border:none;background:#1a1a2e;}
+    .paper-text-preview{padding:22px 28px;max-height:500px;overflow-y:auto;font-family:'JetBrains Mono',monospace;font-size:.78rem;line-height:1.9;color:var(--t2);white-space:pre-wrap;word-break:break-word;}
+
+    /* OVERALL SCORE */
+    .score-ring-wrap{display:flex;align-items:center;gap:20px;padding:18px 22px;background:rgba(255,255,255,.02);border-bottom:1px solid var(--bd);}
+    .score-ring{position:relative;width:72px;height:72px;flex-shrink:0;}
+    .score-ring svg{transform:rotate(-90deg);}
+    .score-ring-num{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:1.15rem;font-weight:900;letter-spacing:-.04em;}
+    .score-info-title{font-size:.95rem;font-weight:800;color:var(--t1);margin-bottom:4px;}
+    .score-info-sub{font-size:.78rem;color:var(--t2);line-height:1.6;}
+
+    /* REPHRASE & PLAGIARISM */
+    .rephrase-panel{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:4px;}
+    .rephrase-col{display:flex;flex-direction:column;gap:8px;}
+    .rephrase-col-label{font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.09em;color:var(--t3);display:flex;align-items:center;gap:6px;}
+    .rephrase-textarea{width:100%;min-height:180px;background:rgba(255,255,255,.03);border:1px solid var(--bd);border-radius:var(--r);padding:12px 14px;font-size:.83rem;font-family:'Inter',sans-serif;color:var(--t1);line-height:1.75;resize:vertical;outline:none;transition:border-color .2s;}
+    .rephrase-textarea:focus{border-color:rgba(99,102,241,.45);}
+    .rephrase-textarea.rephrased{border-color:rgba(16,185,129,.3);background:rgba(16,185,129,.03);}
+    .mode-pills{display:flex;gap:6px;flex-wrap:wrap;}
+    .mode-pill{padding:5px 12px;border-radius:20px;font-size:.72rem;font-weight:600;cursor:pointer;border:1px solid var(--bd);background:transparent;color:var(--t2);transition:all .18s;}
+    .mode-pill.active{background:rgba(99,102,241,.15);border-color:rgba(99,102,241,.4);color:#a78bfa;}
+    .btn-rephrase{background:linear-gradient(135deg,var(--accent),var(--accent2));border:none;border-radius:var(--r);padding:10px 20px;font-size:.83rem;font-weight:700;color:#fff;cursor:pointer;display:flex;align-items:center;gap:7px;transition:all .2s;box-shadow:0 4px 14px rgba(99,102,241,.35);}
+    .btn-rephrase:hover{transform:translateY(-1px);box-shadow:0 6px 20px rgba(99,102,241,.5);}
+    .btn-rephrase:disabled{opacity:.55;cursor:not-allowed;transform:none;}
+    .rephrase-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+    .btn-copy-reph{background:rgba(16,185,129,.1);border:1px solid rgba(16,185,129,.25);color:#34d399;border-radius:8px;padding:6px 14px;font-size:.75rem;font-weight:600;cursor:pointer;transition:all .18s;}
+    .btn-copy-reph:hover{background:rgba(16,185,129,.2);}
+    .word-diff{font-size:.72rem;color:var(--t3);margin-left:auto;}
+    /* per-section rephrase */
+    .sec-rephrase-wrap{margin-top:10px;border:1px solid rgba(99,102,241,.18);border-radius:10px;overflow:hidden;}
+    .sec-rephrase-head{padding:8px 14px;background:rgba(99,102,241,.07);display:flex;align-items:center;justify-content:space-between;gap:10px;}
+    .sec-rephrase-lbl{font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.09em;color:#a78bfa;display:flex;align-items:center;gap:5px;}
+    .btn-sec-rephrase{background:rgba(99,102,241,.15);border:1px solid rgba(99,102,241,.3);color:#a78bfa;border-radius:7px;padding:5px 12px;font-size:.72rem;font-weight:700;cursor:pointer;transition:all .18s;display:flex;align-items:center;gap:5px;}
+    .btn-sec-rephrase:hover{background:rgba(99,102,241,.25);}
+    .sec-rephrase-body{padding:12px 14px;display:none;}
+    .sec-rephrase-body.visible{display:block;}
+    .sec-rephrase-out{font-size:.83rem;line-height:1.78;color:#34d399;background:rgba(16,185,129,.04);border-radius:8px;padding:10px 13px;margin-top:8px;border:1px solid rgba(16,185,129,.15);}
+    /* plagiarism */
+    .plag-score-wrap{display:flex;align-items:center;gap:20px;padding:20px;background:rgba(255,255,255,.02);border-radius:var(--r);border:1px solid var(--bd);margin-bottom:18px;}
+    .plag-ring{position:relative;width:80px;height:80px;flex-shrink:0;}
+    .plag-ring-num{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;flex-direction:column;}
+    .plag-pct{font-size:1.3rem;font-weight:900;line-height:1;}
+    .plag-lbl{font-size:.58rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--t3);margin-top:2px;}
+    .plag-info-title{font-size:.95rem;font-weight:800;margin-bottom:4px;}
+    .plag-info-sub{font-size:.78rem;color:var(--t2);line-height:1.6;}
+    .plag-risk-low{color:#34d399;} .plag-risk-medium{color:#fbbf24;} .plag-risk-high{color:#fb923c;} .plag-risk-critical{color:#f43f5e;}
+    .matched-phrase{display:inline-block;background:rgba(244,63,94,.1);border:1px solid rgba(244,63,94,.2);border-radius:5px;padding:3px 8px;font-size:.75rem;font-family:'JetBrains Mono',monospace;color:#fb7185;margin:3px;}
+    @media(max-width:768px){.rephrase-panel{grid-template-columns:1fr;}}
+    .ns-card{background:rgba(255,255,255,.04);border:1px solid var(--bd);border-radius:var(--r);padding:14px;text-decoration:none;display:flex;align-items:center;gap:10px;transition:all .2s;}
+    .ns-card:hover{background:rgba(99,102,241,.07);border-color:rgba(99,102,241,.25);transform:translateY(-2px);}
+    .ns-icon{font-size:1.4rem;flex-shrink:0;}
+    .ns-label{font-size:.82rem;font-weight:700;color:var(--t1);}
+    .ns-desc{font-size:.7rem;color:var(--t3);margin-top:1px;}
+
+    /* ═══════════════════════════════════════════════════════
+       DOCUMENT PLAGIARISM CHECKER STYLES
+       ═══════════════════════════════════════════════════════ */
+    .plag-intro {
+      text-align: center;
+      padding: 40px 20px;
+    }
+    .plag-intro-icon {
+      width: 70px;
+      height: 70px;
+      margin: 0 auto 16px;
+      background: linear-gradient(135deg, rgba(99,102,241,.2), rgba(139,92,246,.2));
+      border-radius: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2rem;
+      color: var(--accent);
+    }
+    .plag-intro h3 {
+      font-size: 1.3rem;
+      font-weight: 800;
+      margin-bottom: 10px;
+      color: var(--t1);
+    }
+    .plag-intro p {
+      font-size: .88rem;
+      color: var(--t2);
+      max-width: 600px;
+      margin: 0 auto 24px;
+      line-height: 1.6;
+    }
+
+    .plag-score-card {
+      background: var(--glass);
+      border: 1px solid var(--bd);
+      border-radius: var(--rl);
+      padding: 28px;
+      display: flex;
+      gap: 32px;
+      align-items: center;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+    }
+    .plag-score-left {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+      flex-shrink: 0;
+    }
+    .plag-score-ring {
+      width: 140px;
+      height: 140px;
+      position: relative;
+    }
+    .plag-score-ring svg {
+      width: 100%;
+      height: 100%;
+    }
+    .plag-score-num {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 2rem;
+      font-weight: 900;
+      color: var(--t1);
+      transition: color 0.3s;
+    }
+    .plag-score-label {
+      font-size: .85rem;
+      font-weight: 700;
+      text-align: center;
+      padding: 6px 16px;
+      border-radius: 20px;
+      transition: all 0.3s;
+    }
+    .plag-score-right {
+      flex: 1;
+      display: flex;
+      gap: 20px;
+      flex-wrap: wrap;
+      min-width: 300px;
+    }
+    .plag-stat {
+      flex: 1;
+      min-width: 140px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px;
+      background: rgba(255,255,255,.03);
+      border: 1px solid rgba(255,255,255,.06);
+      border-radius: var(--r);
+      transition: all 0.2s;
+    }
+    .plag-stat:hover {
+      background: rgba(255,255,255,.05);
+      border-color: rgba(255,255,255,.1);
+    }
+    .plag-stat i {
+      font-size: 1.5rem;
+      opacity: .6;
+    }
+    .plag-stat-num {
+      font-size: 1.5rem;
+      font-weight: 800;
+      color: var(--t1);
+    }
+    .plag-stat-lbl {
+      font-size: .7rem;
+      color: var(--t3);
+      text-transform: uppercase;
+      letter-spacing: .05em;
+    }
+
+    .plag-recommendation {
+      background: linear-gradient(135deg, rgba(99,102,241,.12), rgba(139,92,246,.08));
+      border: 1px solid rgba(99,102,241,.25);
+      border-radius: var(--r);
+      padding: 16px 20px;
+      margin-bottom: 16px;
+    }
+
+    .plag-flagged-wrap, .plag-phrases-wrap {
+      margin-top: 20px;
+      background: var(--glass);
+      border: 1px solid var(--bd);
+      border-radius: var(--rl);
+      padding: 20px;
+    }
+    .plag-flagged-wrap h4, .plag-phrases-wrap h4 {
+      font-size: 1rem;
+      font-weight: 700;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--t1);
+    }
+    .plag-flagged-hint {
+      font-size: .82rem;
+      color: var(--t2);
+      margin-bottom: 14px;
+    }
+
+    .plag-flagged-item {
+      background: rgba(244,63,94,.08);
+      border: 1px solid rgba(244,63,94,.2);
+      border-radius: var(--r);
+      padding: 14px;
+      margin-bottom: 10px;
+      transition: all 0.2s;
+    }
+    .plag-flagged-item:hover {
+      background: rgba(244,63,94,.12);
+      border-color: rgba(244,63,94,.3);
+    }
+    .plag-flagged-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 8px;
+    }
+    .plag-flagged-pos {
+      font-size: .75rem;
+      font-weight: 600;
+      color: var(--t3);
+    }
+    .plag-flagged-score {
+      font-size: .8rem;
+      font-weight: 700;
+      padding: 3px 10px;
+      border-radius: 12px;
+      background: rgba(244,63,94,.15);
+      color: #fb7185;
+    }
+    .plag-flagged-text {
+      font-size: .85rem;
+      color: var(--t2);
+      line-height: 1.6;
+      margin-bottom: 8px;
+      padding: 8px;
+      background: rgba(0,0,0,.2);
+      border-radius: 6px;
+    }
+    .plag-flagged-phrases {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 8px;
+    }
+    .plag-phrase-tag {
+      font-size: .7rem;
+      padding: 3px 8px;
+      background: rgba(245,158,11,.12);
+      border: 1px solid rgba(245,158,11,.25);
+      border-radius: 10px;
+      color: #fbbf24;
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    #plagPhrasesList {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .plag-common-phrase {
+      font-size: .78rem;
+      padding: 6px 12px;
+      background: rgba(99,102,241,.1);
+      border: 1px solid rgba(99,102,241,.2);
+      border-radius: 14px;
+      color: #a78bfa;
+      font-family: 'JetBrains Mono', monospace;
+      transition: all 0.2s;
+    }
+    .plag-common-phrase:hover {
+      background: rgba(99,102,241,.18);
+      border-color: rgba(99,102,241,.35);
+    }
+
+    @media(max-width:1200px){.page-wrap{max-width:100%;}}
+    @media(max-width:768px){.page-wrap{padding:14px;}.stats-row{grid-template-columns:repeat(2,1fr);}.hero-title{font-size:1.4rem;}.row-2{grid-template-columns:1fr;}.ns-grid{grid-template-columns:1fr;}.nav-links li:not(:last-child){display:none;}}
+  </style>
+</head>
+<body>
+
+  <!-- NAVBAR -->
+  <div class="topnav">
+    <div class="tnav-inner">
+      <a href="/" class="brand"><div class="brand-mark">🧠</div>GenAI<span style="color:var(--accent);">.</span>Mapper</a>
+      <ul class="nav-links">
+        <li><a href="/"><i class="bi bi-house-fill"></i> Home</a></li>
+        <li><a href="/map"><i class="bi bi-diagram-2-fill"></i> Map</a></li>
+        <li><a href="/dashboard"><i class="bi bi-speedometer2"></i> Dashboard</a></li>
+        <li class="has-drop">
+          <a href="#"><i class="bi bi-journals"></i> Research <i class="bi bi-chevron-down" style="font-size:.65rem;"></i></a>
+          <div class="drop-menu">
+            <a href="/research" class="active"><i class="bi bi-file-earmark-text-fill"></i> Paper Analyzer</a>
+            <a href="/benchmark"><i class="bi bi-trophy-fill"></i> Model Benchmark</a>
+            <a href="/datasets"><i class="bi bi-database-fill"></i> Dataset Explorer</a>
+            <a href="/citations"><i class="bi bi-journal-bookmark-fill"></i> Citation Tracker</a>
+            <hr>
+            <a href="/gap-finder"><i class="bi bi-binoculars-fill"></i> Gap Finder</a>
+            <a href="/literature"><i class="bi bi-file-earmark-richtext-fill"></i> Literature Review</a>
+          </div>
+        </li>
+        <li><a href="/about"><i class="bi bi-info-circle-fill"></i> About</a></li>
+        <li><a href="/contact"><i class="bi bi-envelope-fill"></i> Contact</a></li>
+      </ul>
+      <div class="ml-auto"><a href="/login" class="btn-cta"><i class="bi bi-box-arrow-in-right"></i> Login</a></div>
+    </div>
+  </div>
+
+  {% set current_page = 'research' %}
+  {% include 'page_nav.html' %}
+
+  <div class="page-wrap">
+    <div class="main-col">
+
+      <!-- HERO -->
+      <div class="hero">
+        <div class="hero-top">
+          <div>
+            {% if analysis_complete %}
+            <div class="hero-badge" style="border-color:{{ analysis.doc_color }}55;color:{{ analysis.doc_color }};"><i class="bi {{ analysis.doc_icon }}"></i> {{ analysis.doc_label }} Detected</div>
+            {% else %}
+            <div class="hero-badge"><i class="bi bi-file-earmark-arrow-up"></i> Document Analyzer</div>
+            {% endif %}
+            <h1 class="hero-title">{% if analysis_complete %}{{ analysis.doc_label }} <span>Deep Analyzer</span>{% else %}Document <span>Deep Analyzer</span>{% endif %}</h1>
+            <p class="hero-sub">Auto-detects type: Research Paper · Resume / CV · Report · Thesis · Legal Contract · Business Plan · Extracts relevant sections · AI insights per section · Suggested content to reach 100%</p>
+          </div>
+          <div class="hero-actions">
+            <a href="/" class="btn-ghost"><i class="bi bi-arrow-left-circle-fill"></i> Back</a>
+            <a href="/gap-finder" class="btn-ghost"><i class="bi bi-binoculars-fill"></i> Gap Finder</a>
+            <a href="/citations" class="btn-ghost"><i class="bi bi-journal-bookmark-fill"></i> Citations</a>
+          </div>
+        </div>
+        {% if analysis_complete %}
+        <div class="stats-row">
+          <div class="stat-item">
+            <div class="stat-ico ti-indigo"><i class="bi bi-person-badge-fill"></i></div>
+            <div><div class="stat-num" style="color:#a78bfa;">{{ analysis.entity_count }}</div><div class="stat-lbl">Entities</div></div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-ico ti-amber"><i class="bi bi-journals"></i></div>
+            <div><div class="stat-num" style="color:#fbbf24;">{{ analysis.citation_count }}</div><div class="stat-lbl">Citations</div></div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-ico ti-cyan"><i class="bi bi-tags-fill"></i></div>
+            <div><div class="stat-num" style="color:#38bdf8;">{{ analysis.keyword_count }}</div><div class="stat-lbl">Keywords</div></div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-ico ti-green"><i class="bi bi-file-text-fill"></i></div>
+            <div><div class="stat-num" style="color:#34d399;">{{ analysis.pages }}</div><div class="stat-lbl">Pages</div></div>
+          </div>
+        </div>
+        {% endif %}
+      </div>
+
+      <!-- UPLOAD -->
+      <div class="card">
+        <div class="card-header">
+          <h3 class="card-title"><div class="ti ti-indigo"><i class="bi bi-cloud-arrow-up-fill"></i></div>Upload Document</h3>
+          <span class="card-tag tag-indigo">Step 1 — Auto-Detects Type</span>
+        </div>
+        <div class="card-body">
+          <form method="POST" enctype="multipart/form-data" id="paperForm">
+            <div class="upload-zone {% if analysis_complete %}has-file{% endif %}" id="uploadZone" onclick="document.getElementById('fileInput').click()">
+              {% if analysis_complete %}
+                <i class="bi bi-check-circle-fill upload-icon" style="color:#34d399;"></i>
+                <div class="upload-title" style="color:#34d399;">{{ paper.title }} — complete</div>
+                <p class="upload-desc">Click to upload a different paper</p>
+              {% else %}
+                <i class="bi bi-file-earmark-arrow-up upload-icon"></i>
+                <div class="upload-title">Drop your document here</div>
+                <p class="upload-desc">Research Paper · Resume · Report · Thesis · Contract · Business Plan · PDF · DOCX · TXT</p>
+              {% endif %}
+            </div>
+            <input type="file" id="fileInput" name="paper_file" accept=".pdf,.docx,.txt" style="display:none;">
+            <div class="row-2">
+              <div>
+                <label class="form-label"><i class="bi bi-book"></i> Document Title <small style="color:var(--t3);">(optional — auto-detected)</small></label>
+                <input type="text" class="form-ctrl" name="paper_title" placeholder="e.g. My Research Paper / John Smith CV / Q3 Report" value="{{ paper.title if analysis_complete else '' }}">
+              </div>
+              <div>
+                <label class="form-label"><i class="bi bi-person"></i> Authors <small style="color:var(--t3);">(optional)</small></label>
+                <input type="text" class="form-ctrl" name="paper_authors" placeholder="e.g. Vaswani et al." value="{{ paper.authors if analysis_complete else '' }}">
+              </div>
+            </div>
+            <button type="submit" class="btn-primary" id="analyzeBtn">
+              <i class="bi bi-lightning-fill"></i> Analyze Paper
+            </button>
+          </form>
+        </div>
+      </div>
+
+      {% if analysis_complete %}
+
+      <!-- METADATA STRIP -->
+      <div class="card">
+        <div class="card-header">
+          <h3 class="card-title"><div class="ti ti-indigo"><i class="bi {{ analysis.doc_icon }}"></i></div><span id="paperTitleDisplay">{{ paper.title or analysis.doc_label }}</span></h3>
+          <span class="card-tag tag-indigo">{{ paper.date_analyzed }}</span>
+        </div>
+        <div class="card-body" style="display:flex;gap:24px;flex-wrap:wrap;align-items:center;">
+          <div><div style="font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--t3);margin-bottom:3px;">Document Type</div><div style="display:flex;align-items:center;gap:6px;"><span style="background:rgba(99,102,241,.12);border:1px solid rgba(99,102,241,.3);border-radius:20px;padding:3px 10px;font-size:.78rem;font-weight:700;color:{{ analysis.doc_color }};"><i class="bi {{ analysis.doc_icon }}" style="margin-right:4px;"></i>{{ analysis.doc_label }}</span></div></div>
+          <div><div style="font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--t3);margin-bottom:3px;">Author / Creator</div><div style="font-size:.9rem;font-weight:600;color:var(--t1);">{{ paper.authors or 'Unknown' }}</div></div>
+          <div><div style="font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--t3);margin-bottom:3px;">Analyzed</div><div style="font-size:.9rem;font-weight:600;color:var(--t1);">{{ paper.date_analyzed }}</div></div>
+          <div><div style="font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--t3);margin-bottom:3px;">Sections Found</div><div style="font-size:.9rem;font-weight:600;color:#34d399;">{{ analysis.sections | selectattr('present') | list | length }} / {{ analysis.sections | length }}</div></div>
+        </div>
+      </div>
+
+      <!-- PAPER PREVIEW + DOWNLOAD -->
+      {% if analysis_complete %}
+      <div class="card" id="paperPreviewCard">
+        <div class="card-header">
+          <h3 class="card-title"><div class="ti ti-cyan"><i class="bi bi-file-earmark-pdf-fill"></i></div>Paper Preview</h3>
+          <div style="display:flex;align-items:center;gap:8px;">
+            <span class="card-tag tag-indigo">{{ paper.file_type | upper if paper.file_type else 'PDF' }}</span>
+            <a href="/download-paper" class="btn-dl" download>
+              <i class="bi bi-download"></i> Download Paper
+            </a>
+          </div>
+        </div>
+        <div class="paper-preview-wrap">
+          <div class="paper-preview-toolbar">
+            <div class="pp-filename"><i class="bi bi-file-earmark-pdf" style="color:#f43f5e;margin-right:6px;"></i>{{ paper.filename or paper.title }}</div>
+            <span class="pp-meta">{{ analysis.pages }} pages · {{ analysis.word_count | default('—') }} words</span>
+          </div>
+          {% if paper.file_type == 'pdf' %}
+          <iframe class="paper-embed" src="/serve-paper#toolbar=0&navpanes=0&scrollbar=1" title="Paper Preview"></iframe>
+          {% elif analysis.raw_text %}
+          <div class="paper-text-preview" id="paperTextPreview">{{ analysis.raw_text[:4000] }}{% if analysis.raw_text|length > 4000 %}
+<span style="color:var(--t3);font-style:italic;">[Showing first 4000 characters — download for full paper]</span>{% endif %}</div>
+          {% else %}
+          <div style="padding:32px;text-align:center;color:var(--t3);font-size:.85rem;"><i class="bi bi-file-earmark-text" style="font-size:2rem;display:block;margin-bottom:10px;opacity:.4;"></i>Preview not available — <a href="/download-paper" style="color:#a78bfa;">download the paper</a> to view it.</div>
+          {% endif %}
+        </div>
+      </div>
+      {% endif %}
+
+      <!-- ══════════════════════════════════════════════
+           TITLE SUGGESTIONS SECTION
+           ══════════════════════════════════════════════ -->
+      <div class="card" id="titleSuggestionsCard">
+        <div class="card-header">
+          <h3 class="card-title">
+            <div class="ti ti-indigo"><i class="bi bi-type-h1"></i></div>
+            Title Suggestions
+          </h3>
+          <span class="card-tag tag-indigo">AI‑Powered</span>
+        </div>
+        <div class="card-body">
+
+          <!-- Original title bar -->
+          <div style="background:rgba(99,102,241,.08);border:1px solid rgba(99,102,241,.2);border-left:3px solid #6366f1;border-radius:10px;padding:13px 16px;margin-bottom:18px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;">
+            <div>
+              <div style="font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:.09em;color:#a78bfa;margin-bottom:5px;"><i class="bi bi-file-earmark-text-fill"></i> Current Paper Title</div>
+              <div id="tvCurrentTitle" style="font-size:.92rem;font-weight:700;color:var(--t1);line-height:1.45;">{{ paper.title }}</div>
+            </div>
+            <span id="tvCurrentWC" style="font-size:.7rem;font-weight:700;background:rgba(99,102,241,.18);color:#a78bfa;border:1px solid rgba(99,102,241,.3);border-radius:20px;padding:4px 12px;white-space:nowrap;flex-shrink:0;">
+              <i class="bi bi-hash"></i> {{ paper.title.split()|length }} words
+            </span>
+          </div>
+
+          <!-- Info tip -->
+          <div style="background:rgba(99,102,241,.06);border:1px solid rgba(99,102,241,.16);border-radius:10px;padding:10px 14px;font-size:.8rem;color:var(--t2);margin-bottom:16px;display:flex;align-items:flex-start;gap:8px;">
+            <i class="bi bi-info-circle-fill" style="color:#a78bfa;margin-top:1px;flex-shrink:0;"></i>
+            <span>AI will generate <strong style="color:var(--t1);">9 title variants</strong> — <strong style="color:#38bdf8;">3 shorter</strong> (punchy & concise), <strong style="color:#fbbf24;">3 similar length</strong> (reworded), and <strong style="color:#34d399;">3 longer</strong> (expanded with subtitle or context). Click any title to select and apply it.</span>
+          </div>
+
+          <!-- Generate button -->
+          <button class="btn-primary" id="tvGenBtn" onclick="generateTitleSuggestions()" style="margin-top:0;margin-bottom:18px;">
+            <i class="bi bi-stars"></i> Generate Title Suggestions
+          </button>
+
+          <!-- Loading -->
+          <div id="tvLoading" style="display:none;text-align:center;padding:28px 20px;">
+            <div style="width:36px;height:36px;border:3px solid rgba(99,102,241,.15);border-top-color:#6366f1;border-radius:50%;animation:tspin .8s linear infinite;margin:0 auto 12px;"></div>
+            <div style="font-size:.85rem;color:var(--t2);">Generating title variations… this takes a few seconds</div>
+          </div>
+          <style>@keyframes tspin{to{transform:rotate(360deg)}}</style>
+
+          <!-- Error -->
+          <div id="tvError" style="display:none;background:rgba(244,63,94,.07);border:1px solid rgba(244,63,94,.22);border-left:3px solid #f43f5e;border-radius:10px;padding:12px 16px;font-size:.83rem;color:#fb7185;margin-bottom:14px;"></div>
+
+          <!-- Results -->
+          <div id="tvResults" style="display:none;">
+
+            <!-- GROUP: SHORTER -->
+            <div style="margin-bottom:22px;">
+              <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
+                <div style="width:28px;height:28px;border-radius:8px;background:rgba(6,182,212,.15);color:#38bdf8;display:flex;align-items:center;justify-content:center;font-size:.85rem;flex-shrink:0;"><i class="bi bi-arrows-collapse"></i></div>
+                <span style="font-size:.82rem;font-weight:700;color:var(--t1);">Shorter Titles</span>
+                <span style="font-size:.7rem;color:var(--t3);margin-left:auto;">Concise · Punchy · Easy to remember</span>
+              </div>
+              <div id="tvShorterCards" style="display:flex;flex-direction:column;gap:8px;"></div>
+            </div>
+
+            <!-- GROUP: SIMILAR -->
+            <div style="margin-bottom:22px;">
+              <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
+                <div style="width:28px;height:28px;border-radius:8px;background:rgba(245,158,11,.15);color:#fbbf24;display:flex;align-items:center;justify-content:center;font-size:.85rem;flex-shrink:0;"><i class="bi bi-arrow-left-right"></i></div>
+                <span style="font-size:.82rem;font-weight:700;color:var(--t1);">Similar Length Titles</span>
+                <span style="font-size:.7rem;color:var(--t3);margin-left:auto;">Reworded · Same scope · Fresh angle</span>
+              </div>
+              <div id="tvSimilarCards" style="display:flex;flex-direction:column;gap:8px;"></div>
+            </div>
+
+            <!-- GROUP: LONGER -->
+            <div style="margin-bottom:22px;">
+              <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
+                <div style="width:28px;height:28px;border-radius:8px;background:rgba(16,185,129,.15);color:#34d399;display:flex;align-items:center;justify-content:center;font-size:.85rem;flex-shrink:0;"><i class="bi bi-arrows-expand"></i></div>
+                <span style="font-size:.82rem;font-weight:700;color:var(--t1);">Longer Titles</span>
+                <span style="font-size:.7rem;color:var(--t3);margin-left:auto;">Descriptive · With subtitle · More specific</span>
+              </div>
+              <div id="tvLongerCards" style="display:flex;flex-direction:column;gap:8px;"></div>
+            </div>
+
+            <!-- Selected title apply bar -->
+            <div id="tvApplyBar" style="display:none;background:rgba(16,185,129,.08);border:1px solid rgba(16,185,129,.22);border-radius:10px;padding:13px 16px;display:none;align-items:center;gap:12px;flex-wrap:wrap;margin-top:6px;">
+              <div style="flex:1;min-width:0;">
+                <div style="font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.09em;color:#34d399;margin-bottom:4px;"><i class="bi bi-check-circle-fill"></i> Selected Title</div>
+                <div id="tvApplyText" style="font-size:.88rem;font-weight:700;color:var(--t1);line-height:1.4;word-break:break-word;"></div>
+              </div>
+              <button onclick="applyTitleSelection()" style="background:linear-gradient(135deg,#10b981,#0d9488);border:none;border-radius:9px;padding:9px 20px;font-size:.82rem;font-weight:700;color:#fff;cursor:pointer;transition:all .2s;box-shadow:0 4px 14px rgba(16,185,129,.3);white-space:nowrap;flex-shrink:0;">
+                <i class="bi bi-check2-circle"></i> Use This Title
+              </button>
+            </div>
+
+          </div><!-- /tvResults -->
+
+        </div>
+      </div>
+      <!-- ══ END TITLE SUGGESTIONS ══ -->
+
+      <!-- ANALYSIS TABS -->
+      <div class="card">
+        <div class="card-header">
+          <h3 class="card-title"><div class="ti ti-green"><i class="bi bi-bar-chart-line-fill"></i></div>{% if analysis_complete %}{{ analysis.doc_label }} Analysis{% else %}Full Document Analysis{% endif %}</h3>
+          <span class="card-tag tag-green">{% if analysis_complete %}{{ analysis.doc_label }}{% else %}8 views{% endif %}</span>
+        </div>
+
+        {% if analysis_complete %}
+        <!-- OVERALL STRENGTH SCORE -->
+        {% set present_count = analysis.sections | selectattr('present') | list | length %}
+        {% set total_count = analysis.sections | length %}
+        {% set score_pct = ((present_count / total_count) * 100) | int if total_count > 0 else 0 %}
+        {% set score_color = '#34d399' if score_pct >= 75 else ('#fbbf24' if score_pct >= 50 else '#fb7185') %}
+        {% set score_label = ('Strong ' + analysis.doc_label) if score_pct >= 75 else (('Moderate ' + analysis.doc_label + ' — Needs Work') if score_pct >= 50 else ('Weak — Key Sections Missing')) %}
+        <div class="score-ring-wrap">
+          <div class="score-ring">
+            <svg width="72" height="72" viewBox="0 0 72 72">
+              <circle cx="36" cy="36" r="29" fill="none" stroke="rgba(255,255,255,.07)" stroke-width="7"/>
+              <circle cx="36" cy="36" r="29" fill="none" stroke="{{ score_color }}" stroke-width="7"
+                stroke-dasharray="{{ (score_pct / 100) * 182.2 }} 182.2"
+                stroke-linecap="round" style="transition:stroke-dasharray 1s ease;"/>
+            </svg>
+            <div class="score-ring-num" style="color:{{ score_color }};">{{ score_pct }}%</div>
+          </div>
+          <div>
+            <div class="score-info-title">{{ score_label }}</div>
+            <div class="score-info-sub">{{ present_count }} of {{ total_count }} {{ analysis.doc_label }} sections detected · {{ analysis.entity_count }} entities · {{ analysis.keyword_count }} keywords</div>
+            {% if score_pct < 75 %}
+            <div style="font-size:.75rem;color:#fbbf24;margin-top:5px;"><i class="bi bi-exclamation-triangle-fill"></i> Missing sections reduce paper credibility — see details below</div>
+            {% endif %}
+          </div>
+        </div>
+        {% endif %}
+
+        <div class="tab-nav" id="mainTabNav">
+          <button class="tab-btn active" onclick="switchTab('tab-sections',this)"><i class="bi bi-layout-text-sidebar-reverse"></i> Sections</button>
+          <button class="tab-btn" onclick="switchTab('tab-rephrase',this)"><i class="bi bi-arrow-repeat"></i> Rephrase</button>
+          <button class="tab-btn" onclick="switchTab('tab-plagiarism',this)"><i class="bi bi-shield-check"></i> Plagiarism Check</button>
+          <button class="tab-btn" onclick="switchTab('tab-summary',this)"><i class="bi bi-robot"></i> AI Summary</button>
+          <button class="tab-btn" onclick="switchTab('tab-entities',this)"><i class="bi bi-tags-fill"></i> Entities</button>
+          <button class="tab-btn" onclick="switchTab('tab-keywords',this)"><i class="bi bi-key-fill"></i> Keywords</button>
+          <button class="tab-btn" onclick="switchTab('tab-citations',this)"><i class="bi bi-journals"></i> Citations</button>
+          <button class="tab-btn" onclick="switchTab('tab-suggest',this)"><i class="bi bi-lightbulb-fill"></i> Suggested Papers</button>
+        </div>
+
+        <!-- SECTIONS TAB -->
+        <div class="tab-pane active" id="tab-sections">
+          {% set sec_icons = {'Abstract':'bi-file-text','Introduction':'bi-door-open','Literature Review':'bi-book-half','Methodology':'bi-gear-wide-connected','Results':'bi-graph-up-arrow','Discussion':'bi-chat-dots','Conclusion':'bi-flag'} %}
+          {% set sec_colors = {'Abstract':'sc-abstract','Introduction':'sc-introduction','Literature Review':'sc-literature','Methodology':'sc-methodology','Results':'sc-results','Discussion':'sc-discussion','Conclusion':'sc-conclusion'} %}
+          {% if analysis.sections %}
+          <div class="sections-grid">
+            {% for sec in analysis.sections %}
+            {% set str_level = sec.strength_level | default('moderate' if sec.present else 'missing') %}
+            {% set str_pct   = sec.strength_pct   | default(80 if sec.present else 0) %}
+            {% set str_cls   = 'str-' + str_level %}
+            {% set sb_cls    = 'sb-'  + str_level %}
+            <div class="sec-card {{ 'present' if sec.present else 'absent' }} {{ str_cls }}" id="seccard{{ loop.index }}">
+              <div class="sec-head" onclick="toggleSec('seccard{{ loop.index }}')">
+                <div class="sec-icon {{ sec_colors.get(sec.name, 'sc-abstract') }}">
+                  <i class="bi {{ sec_icons.get(sec.name, 'bi-file-text') }}"></i>
+                </div>
+                <div class="sec-name">{{ sec.name }}</div>
+                <span class="strength-badge {{ sb_cls }}">{{ str_level | title }}</span>
+                <span class="sec-status {{ 'ss-found' if sec.present else 'ss-miss' }}">{{ 'Found' if sec.present else 'Not detected' }}</span>
+                <i class="bi bi-chevron-down sec-chev"></i>
+              </div>
+              <div class="sec-body">
+                <!-- Strength bar -->
+                <div class="strength-bar-wrap">
+                  <div class="strength-bar-label">
+                    <span class="strength-bar-name">Section Strength</span>
+                    <span class="strength-bar-pct" style="color:{{ '#34d399' if str_level == 'strong' else ('#fbbf24' if str_level == 'moderate' else '#fb7185') }};">{{ str_pct }}%</span>
+                  </div>
+                  <div class="strength-bar-track">
+                    <div class="strength-bar-fill" style="width:{{ str_pct }}%;"></div>
+                  </div>
+                </div>
+
+                {% if sec.completeness_verdict %}
+                <div style="margin-top:8px;font-size:.75rem;color:var(--t2);font-style:italic;"><i class="bi bi-info-circle" style="color:#a78bfa;margin-right:4px;"></i>{{ sec.completeness_verdict }}</div>
+                {% endif %}
+
+                <!-- ── ORIGINAL CONTENT FROM PAPER ── -->
+                {% if sec.present and sec.original_text %}
+                <div style="margin-top:14px;">
+                  <div style="font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:.09em;color:var(--t3);margin-bottom:7px;display:flex;align-items:center;justify-content:space-between;">
+                    <span><i class="bi bi-file-text" style="margin-right:4px;"></i>Original Content from Paper</span>
+                    <button onclick="copyEl('origtext{{ loop.index }}')" style="background:rgba(255,255,255,.05);border:1px solid var(--bd);border-radius:6px;padding:3px 9px;font-size:.65rem;font-weight:600;color:var(--t2);cursor:pointer;"><i class="bi bi-clipboard"></i> Copy</button>
+                  </div>
+                  <div id="origtext{{ loop.index }}" style="background:rgba(255,255,255,.025);border:1px solid var(--bd);border-left:3px solid rgba(99,102,241,.4);border-radius:9px;padding:13px 15px;font-size:.83rem;line-height:1.82;color:var(--t2);max-height:280px;overflow-y:auto;white-space:pre-wrap;word-break:break-word;">{{ sec.original_text }}</div>
+                </div>
+                {% endif %}
+
+                <!-- ── AI INSIGHTS ── -->
+                {% if sec.ai_points %}
+                <div class="sec-ai-enhanced" style="margin-top:14px;">
+                  <div class="sec-ai-lbl"><i class="bi bi-robot"></i> AI Insights — {{ sec.name }}</div>
+                  {% for point in sec.ai_points %}
+                  <div class="sec-ai-point">
+                    <div style="min-width:20px;height:20px;border-radius:50%;background:rgba(99,102,241,.2);display:flex;align-items:center;justify-content:center;font-size:.62rem;font-weight:800;color:#a78bfa;flex-shrink:0;margin-top:3px;">{{ loop.index }}</div>
+                    <span>{{ point }}</span>
+                  </div>
+                  {% endfor %}
+                </div>
+                {% endif %}
+
+                <!-- ── MISSING ELEMENTS ── -->
+                {% if sec.missing_elements %}
+                <div style="margin-top:12px;">
+                  <div style="font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:.09em;color:#fb7185;margin-bottom:7px;"><i class="bi bi-exclamation-triangle-fill" style="margin-right:4px;"></i>Missing Elements</div>
+                  <div style="display:flex;flex-wrap:wrap;gap:6px;">
+                    {% for el in sec.missing_elements %}
+                    <span style="background:rgba(244,63,94,.09);border:1px solid rgba(244,63,94,.22);border-radius:20px;padding:3px 10px;font-size:.72rem;font-weight:600;color:#fb7185;">{{ el }}</span>
+                    {% endfor %}
+                  </div>
+                </div>
+                {% endif %}
+
+                <!-- ── AI SUGGESTED CONTENT (fills to 100%) ── -->
+                {% if sec.suggested_content %}
+                <div style="margin-top:14px;">
+                  <div style="font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:.09em;color:#34d399;margin-bottom:7px;display:flex;align-items:center;justify-content:space-between;">
+                    <span><i class="bi bi-stars" style="margin-right:4px;"></i>AI Suggested Content — adds to reach 100%</span>
+                    <button onclick="copyEl('sugg{{ loop.index }}')" style="background:rgba(52,211,153,.1);border:1px solid rgba(52,211,153,.25);border-radius:6px;padding:3px 9px;font-size:.65rem;font-weight:600;color:#34d399;cursor:pointer;"><i class="bi bi-clipboard"></i> Copy</button>
+                  </div>
+                  <div id="sugg{{ loop.index }}" style="background:rgba(52,211,153,.05);border:1px solid rgba(52,211,153,.2);border-left:3px solid #34d399;border-radius:9px;padding:13px 15px;font-size:.85rem;line-height:1.82;color:var(--t1);">{{ sec.suggested_content }}</div>
+                </div>
+
+                <!-- ── FULL IMPROVED VERSION (Original + AI merged) ── -->
+                <div style="margin-top:12px;">
+                  <div style="font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:.09em;color:#38bdf8;margin-bottom:7px;display:flex;align-items:center;justify-content:space-between;">
+                    <span><i class="bi bi-check2-all" style="margin-right:4px;"></i>Full Improved Version (Original + AI = 100%)</span>
+                    <button onclick="copyEl('improved{{ loop.index }}')" style="background:rgba(6,182,212,.1);border:1px solid rgba(6,182,212,.25);border-radius:6px;padding:3px 9px;font-size:.65rem;font-weight:600;color:#38bdf8;cursor:pointer;"><i class="bi bi-clipboard-check"></i> Copy Full</button>
+                  </div>
+                  <div id="improved{{ loop.index }}" style="background:rgba(6,182,212,.04);border:1px solid rgba(6,182,212,.18);border-radius:9px;padding:13px 15px;font-size:.85rem;line-height:1.82;color:var(--t1);max-height:400px;overflow-y:auto;">
+                    {% if sec.original_text %}{{ sec.original_text }}<br><br><span style="display:block;font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#38bdf8;margin-bottom:6px;">[AI Improvements — adds below to reach 100%]</span>{% endif %}{{ sec.suggested_content }}
+                  </div>
+                </div>
+                {% endif %}
+
+                <!-- Per-section rephrase -->
+                {% if sec.present and sec.original_text %}
+                <div class="sec-rephrase-wrap" id="rw{{ loop.index }}" style="margin-top:12px;">
+                  <div class="sec-rephrase-head">
+                    <span class="sec-rephrase-lbl"><i class="bi bi-arrow-repeat"></i> Rephrase this section</span>
+                    <button class="btn-sec-rephrase" onclick="rephraseSection({{ loop.index }}, {{ sec.original_text | tojson }}, '{{ sec.name }}')">
+                      <i class="bi bi-stars"></i> Rephrase
+                    </button>
+                  </div>
+                  <div class="sec-rephrase-body" id="rb{{ loop.index }}">
+                    <div style="font-size:.68rem;color:var(--t3);margin-bottom:6px;">Rephrased version — reduced plagiarism, same meaning</div>
+                    <div class="sec-rephrase-out" id="ro{{ loop.index }}"></div>
+                    <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap;">
+                      <button class="btn-copy-reph" onclick="copyText('ro{{ loop.index }}')"><i class="bi bi-clipboard"></i> Copy</button>
+                      <button class="btn-copy-reph" style="background:rgba(99,102,241,.1);border-color:rgba(99,102,241,.25);color:#a78bfa;" onclick="checkPlagSection({{ loop.index }}, {{ sec.original_text | tojson }})"><i class="bi bi-shield-check"></i> Check Similarity</button>
+                      <span class="word-diff" id="wdiff{{ loop.index }}"></span>
+                    </div>
+                    <div id="plagResult{{ loop.index }}" style="display:none;margin-top:10px;"></div>
+                  </div>
+                </div>
+                {% endif %}
+
+                <!-- Improvement suggestions -->
+                {% if not sec.present %}
+                <div class="improvement-box missing" style="margin-top:12px;">
+                  <div class="improvement-lbl"><i class="bi bi-x-circle-fill"></i> Missing Section — Action Required</div>
+                  <div class="improvement-actions">
+                    {% if sec.name == 'Abstract' %}
+                    <div class="imp-action"><div class="imp-icon rose"><i class="bi bi-card-text"></i></div><div class="imp-action-text"><div class="imp-action-title">Write a 150–250 word abstract</div><div class="imp-action-desc">Cover the problem, approach, results, and conclusion in one concise paragraph.</div></div></div>
+                    <div class="imp-action"><div class="imp-icon amber"><i class="bi bi-bullseye"></i></div><div class="imp-action-text"><div class="imp-action-title">State the core contribution clearly</div><div class="imp-action-desc">Readers decide whether to read your paper based on the abstract — make the value obvious.</div></div></div>
+                    <div class="imp-action"><div class="imp-icon cyan"><i class="bi bi-key-fill"></i></div><div class="imp-action-text"><div class="imp-action-title">Include 4–6 keywords below the abstract</div><div class="imp-action-desc">Keywords improve discoverability in academic databases like IEEE Xplore and Google Scholar.</div></div></div>
+                    {% elif sec.name == 'Introduction' %}
+                    <div class="imp-action"><div class="imp-icon rose"><i class="bi bi-question-circle-fill"></i></div><div class="imp-action-text"><div class="imp-action-title">Define the problem and motivation</div><div class="imp-action-desc">Open with why this problem matters and what gap in existing work you are addressing.</div></div></div>
+                    <div class="imp-action"><div class="imp-icon amber"><i class="bi bi-list-check"></i></div><div class="imp-action-text"><div class="imp-action-title">State your research objectives clearly</div><div class="imp-action-desc">List 2–4 specific objectives or research questions the paper answers.</div></div></div>
+                    <div class="imp-action"><div class="imp-icon cyan"><i class="bi bi-diagram-3-fill"></i></div><div class="imp-action-text"><div class="imp-action-title">Outline the paper structure</div><div class="imp-action-desc">End the introduction with a brief paragraph describing what each section covers.</div></div></div>
+                    {% elif sec.name == 'Literature Review' %}
+                    <div class="imp-action"><div class="imp-icon rose"><i class="bi bi-book-fill"></i></div><div class="imp-action-text"><div class="imp-action-title">Survey at least 15–20 related works</div><div class="imp-action-desc">Group prior work thematically, not just chronologically, to show your understanding of the field.</div></div></div>
+                    <div class="imp-action"><div class="imp-icon amber"><i class="bi bi-binoculars-fill"></i></div><div class="imp-action-text"><div class="imp-action-title">Identify the research gap explicitly</div><div class="imp-action-desc">Show what existing work does NOT solve — this is where your paper contributes.</div></div></div>
+                    <div class="imp-action"><div class="imp-icon cyan"><i class="bi bi-table"></i></div><div class="imp-action-text"><div class="imp-action-title">Add a comparison table of related work</div><div class="imp-action-desc">A table comparing key papers on dimensions like method, dataset, accuracy makes the gap visual.</div></div></div>
+                    {% elif sec.name == 'Methodology' %}
+                    <div class="imp-action"><div class="imp-icon rose"><i class="bi bi-gear-wide-connected"></i></div><div class="imp-action-text"><div class="imp-action-title">Describe your system architecture / approach</div><div class="imp-action-desc">Include a block diagram or flow diagram showing how your method works end-to-end.</div></div></div>
+                    <div class="imp-action"><div class="imp-icon amber"><i class="bi bi-database-fill"></i></div><div class="imp-action-text"><div class="imp-action-title">Document your dataset and preprocessing</div><div class="imp-action-desc">State the dataset name, size, split ratios, and any cleaning steps applied.</div></div></div>
+                    <div class="imp-action"><div class="imp-icon green"><i class="bi bi-code-square"></i></div><div class="imp-action-text"><div class="imp-action-title">Specify tools, frameworks, and hyperparameters</div><div class="imp-action-desc">Reproducibility requires exact details — library versions, model configs, hardware used.</div></div></div>
+                    {% elif sec.name == 'Results' %}
+                    <div class="imp-action"><div class="imp-icon rose"><i class="bi bi-graph-up-arrow"></i></div><div class="imp-action-text"><div class="imp-action-title">Report quantitative metrics with tables</div><div class="imp-action-desc">Include accuracy, F1, precision, recall, or domain-specific metrics in a results table.</div></div></div>
+                    <div class="imp-action"><div class="imp-icon amber"><i class="bi bi-bar-chart-fill"></i></div><div class="imp-action-text"><div class="imp-action-title">Add visualisation charts</div><div class="imp-action-desc">Graphs, confusion matrices, or ROC curves make results easier to read and cite.</div></div></div>
+                    <div class="imp-action"><div class="imp-icon violet"><i class="bi bi-trophy-fill"></i></div><div class="imp-action-text"><div class="imp-action-title">Compare against baseline models</div><div class="imp-action-desc">Show how your method performs vs. at least 2–3 existing approaches on the same dataset.</div></div></div>
+                    {% elif sec.name == 'Discussion' %}
+                    <div class="imp-action"><div class="imp-icon rose"><i class="bi bi-chat-dots-fill"></i></div><div class="imp-action-text"><div class="imp-action-title">Interpret what the results mean</div><div class="imp-action-desc">Don't just restate numbers — explain why your method performed the way it did.</div></div></div>
+                    <div class="imp-action"><div class="imp-icon amber"><i class="bi bi-exclamation-triangle-fill"></i></div><div class="imp-action-text"><div class="imp-action-title">Acknowledge limitations honestly</div><div class="imp-action-desc">Reviewers expect this — a paper without limitations looks overconfident or incomplete.</div></div></div>
+                    <div class="imp-action"><div class="imp-icon indigo"><i class="bi bi-arrow-repeat"></i></div><div class="imp-action-text"><div class="imp-action-title">Relate findings back to your research objectives</div><div class="imp-action-desc">Check each objective from the Introduction — confirm whether it was achieved.</div></div></div>
+                    {% elif sec.name == 'Conclusion' %}
+                    <div class="imp-action"><div class="imp-icon rose"><i class="bi bi-flag-fill"></i></div><div class="imp-action-text"><div class="imp-action-title">Summarise key contributions in 3–5 sentences</div><div class="imp-action-desc">The conclusion should stand alone — a reader who skips to it must understand what was done.</div></div></div>
+                    <div class="imp-action"><div class="imp-icon amber"><i class="bi bi-rocket-takeoff-fill"></i></div><div class="imp-action-text"><div class="imp-action-title">Suggest future work directions</div><div class="imp-action-desc">Propose at least 2 concrete extensions — this shows the work has ongoing value.</div></div></div>
+                    <div class="imp-action"><div class="imp-icon green"><i class="bi bi-award-fill"></i></div><div class="imp-action-text"><div class="imp-action-title">Restate impact and real-world applicability</div><div class="imp-action-desc">End with a strong statement on who benefits from your findings and how.</div></div></div>
+                    {% else %}
+                    <div class="imp-action"><div class="imp-icon rose"><i class="bi bi-plus-circle-fill"></i></div><div class="imp-action-text"><div class="imp-action-title">Add the {{ sec.name }} section</div><div class="imp-action-desc">{{ sec.improvement_hint | default('This section is missing. Adding it will improve the paper\'s completeness and academic credibility.') }}</div></div></div>
+                    {% endif %}
+                  </div>
+                </div>
+
+                <!-- Weak / moderate section — icon improvement checklist -->
+                {% elif str_level in ['weak', 'moderate'] %}
+                <div class="improvement-box">
+                  <div class="improvement-lbl"><i class="bi bi-pencil-square"></i> Suggested Improvements</div>
+                  <div class="improvement-actions">
+                    {% if sec.name == 'Abstract' %}
+                    <div class="imp-action"><div class="imp-icon amber"><i class="bi bi-arrows-expand"></i></div><div class="imp-action-text"><div class="imp-action-title">Expand to 150–250 words if too short</div><div class="imp-action-desc">A very short abstract signals incomplete reporting — ensure all four elements (problem, method, result, conclusion) are covered.</div></div></div>
+                    <div class="imp-action"><div class="imp-icon cyan"><i class="bi bi-graph-up"></i></div><div class="imp-action-text"><div class="imp-action-title">Include a specific result or metric</div><div class="imp-action-desc">Abstracts with numbers (e.g. "achieved 94.2% accuracy") are significantly more cited.</div></div></div>
+                    {% elif sec.name == 'Introduction' %}
+                    <div class="imp-action"><div class="imp-icon amber"><i class="bi bi-funnel-fill"></i></div><div class="imp-action-text"><div class="imp-action-title">Strengthen the problem framing</div><div class="imp-action-desc">Use data or a striking statistic to justify why this problem needs solving now.</div></div></div>
+                    <div class="imp-action"><div class="imp-icon cyan"><i class="bi bi-signpost-split-fill"></i></div><div class="imp-action-text"><div class="imp-action-title">Make the research gap explicit</div><div class="imp-action-desc">Add a sentence like "Existing work has not addressed X, which this paper solves by Y."</div></div></div>
+                    {% elif sec.name == 'Literature Review' %}
+                    <div class="imp-action"><div class="imp-icon amber"><i class="bi bi-diagram-2-fill"></i></div><div class="imp-action-text"><div class="imp-action-title">Group references into themes</div><div class="imp-action-desc">Avoid listing papers one by one — group them by approach, dataset, or technique for better flow.</div></div></div>
+                    <div class="imp-action"><div class="imp-icon cyan"><i class="bi bi-search"></i></div><div class="imp-action-text"><div class="imp-action-title">Add more recent papers (last 3 years)</div><div class="imp-action-desc">Reviewers look for up-to-date coverage — cite papers from 2022–2025 where possible.</div></div></div>
+                    {% elif sec.name == 'Methodology' %}
+                    <div class="imp-action"><div class="imp-icon amber"><i class="bi bi-boxes"></i></div><div class="imp-action-text"><div class="imp-action-title">Add an architecture diagram</div><div class="imp-action-desc">A figure showing your pipeline or model architecture makes the methodology immediately clear.</div></div></div>
+                    <div class="imp-action"><div class="imp-icon green"><i class="bi bi-sliders"></i></div><div class="imp-action-text"><div class="imp-action-title">List all hyperparameters and training settings</div><div class="imp-action-desc">Learning rate, batch size, epochs, optimiser — these must be stated for reproducibility.</div></div></div>
+                    {% elif sec.name == 'Results' %}
+                    <div class="imp-action"><div class="imp-icon amber"><i class="bi bi-graph-up-arrow"></i></div><div class="imp-action-text"><div class="imp-action-title">Add more visualisations</div><div class="imp-action-desc">Charts, heatmaps, or example outputs make results more convincing and easier to interpret.</div></div></div>
+                    <div class="imp-action"><div class="imp-icon violet"><i class="bi bi-shield-check"></i></div><div class="imp-action-text"><div class="imp-action-title">Include statistical significance</div><div class="imp-action-desc">Report standard deviation or confidence intervals, especially for machine learning results.</div></div></div>
+                    {% elif sec.name == 'Discussion' %}
+                    <div class="imp-action"><div class="imp-icon amber"><i class="bi bi-lightbulb-fill"></i></div><div class="imp-action-text"><div class="imp-action-title">Deepen the interpretation of results</div><div class="imp-action-desc">Explain unexpected results or outliers — this shows critical thinking to reviewers.</div></div></div>
+                    <div class="imp-action"><div class="imp-icon indigo"><i class="bi bi-intersect"></i></div><div class="imp-action-text"><div class="imp-action-title">Connect findings to prior literature</div><div class="imp-action-desc">Compare your results to the related work you cited — do they agree, contradict, or extend them?</div></div></div>
+                    {% elif sec.name == 'Conclusion' %}
+                    <div class="imp-action"><div class="imp-icon amber"><i class="bi bi-check2-all"></i></div><div class="imp-action-text"><div class="imp-action-title">Revisit each research objective</div><div class="imp-action-desc">Confirm whether each goal set in the Introduction was achieved — tie the paper together.</div></div></div>
+                    <div class="imp-action"><div class="imp-icon green"><i class="bi bi-rocket-takeoff-fill"></i></div><div class="imp-action-text"><div class="imp-action-title">Expand future work suggestions</div><div class="imp-action-desc">Vague "future work" sections are a common reviewer complaint — be specific about next steps.</div></div></div>
+                    {% else %}
+                    <div class="imp-action"><div class="imp-icon amber"><i class="bi bi-pencil-fill"></i></div><div class="imp-action-text"><div class="imp-action-title">Strengthen this section</div><div class="imp-action-desc">{{ sec.improvement_hint | default('Add more depth, specific data, and clear structure to improve this section\'s impact.') }}</div></div></div>
+                    {% endif %}
+                  </div>
+                </div>
+                {% endif %}
+              </div>
+            </div>
+            {% endfor %}
+          </div>
+          {% else %}
+          <div class="empty-state"><div class="empty-ico"><i class="bi bi-layout-text-sidebar-reverse"></i></div><h3>No Sections Extracted</h3><p>Upload a valid paper to extract its sections.</p></div>
+          {% endif %}
+        </div>
+
+        <!-- REPHRASE TAB -->
+        <div class="tab-pane" id="tab-rephrase">
+          <div style="font-size:.8rem;color:var(--t2);margin-bottom:18px;line-height:1.7;">
+            <i class="bi bi-arrow-repeat" style="color:#a78bfa;"></i>
+            Paste any text from your paper below — or use the <strong style="color:var(--t1);">Rephrase</strong> buttons inside each section above. Choose a mode and click Rephrase to get a plagiarism-reduced version.
+          </div>
+
+          <!-- Mode selector -->
+          <div style="margin-bottom:14px;">
+            <div style="font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.09em;color:var(--t3);margin-bottom:8px;">Rephrase Mode</div>
+            <div class="mode-pills">
+              <button class="mode-pill active" onclick="setMode('academic',this)"><i class="bi bi-mortarboard-fill"></i> Academic</button>
+              <button class="mode-pill" onclick="setMode('simple',this)"><i class="bi bi-chat-text-fill"></i> Simple</button>
+              <button class="mode-pill" onclick="setMode('technical',this)"><i class="bi bi-cpu-fill"></i> Technical</button>
+            </div>
+          </div>
+
+          <!-- Full paper rephrase button -->
+          <button class="btn-rephrase" style="margin-bottom:16px;width:100%;justify-content:center;" onclick="rephraseFullPaper()">
+            <i class="bi bi-file-earmark-arrow-up-fill"></i> Rephrase Entire Paper Content
+          </button>
+
+          <div class="rephrase-panel">
+            <div class="rephrase-col">
+              <div class="rephrase-col-label"><i class="bi bi-file-text"></i> Original Text</div>
+              <textarea class="rephrase-textarea" id="rephraseInput" placeholder="Paste your text here, or click 'Rephrase Entire Paper' above…">{{ analysis.raw_text if analysis_complete else '' }}</textarea>
+              <div class="rephrase-actions">
+                <button class="btn-rephrase" onclick="rephraseCustom()" id="rephraseBtn">
+                  <i class="bi bi-stars"></i> Rephrase
+                </button>
+                <span id="rephraseWordCount" style="font-size:.72rem;color:var(--t3);"></span>
+              </div>
+            </div>
+            <div class="rephrase-col">
+              <div class="rephrase-col-label"><i class="bi bi-check2-circle" style="color:#34d399;"></i> Rephrased Version</div>
+              <textarea class="rephrase-textarea rephrased" id="rephraseOutput" placeholder="Rephrased text will appear here…" readonly></textarea>
+              <div class="rephrase-actions">
+                <button class="btn-copy-reph" onclick="copyTextById('rephraseOutput')"><i class="bi bi-clipboard"></i> Copy</button>
+                <button class="btn-copy-reph" style="background:rgba(99,102,241,.1);border-color:rgba(99,102,241,.25);color:#a78bfa;" onclick="checkPlagCustom()"><i class="bi bi-shield-check"></i> Check Plagiarism</button>
+                <span class="word-diff" id="fullWordDiff"></span>
+              </div>
+            </div>
+          </div>
+          <div id="rephraseLoading" style="display:none;text-align:center;padding:20px;color:var(--t2);font-size:.85rem;">
+            <div style="width:28px;height:28px;border:3px solid rgba(99,102,241,.15);border-top-color:#6366f1;border-radius:50%;animation:tspin .8s linear infinite;margin:0 auto 10px;"></div>
+            Rephrasing… this takes a few seconds
+          </div>
+          <div id="rephraseError" style="display:none;background:rgba(244,63,94,.07);border:1px solid rgba(244,63,94,.2);border-radius:9px;padding:12px 16px;font-size:.83rem;color:#fb7185;margin-top:12px;"></div>
+        </div>
+
+        <!-- PLAGIARISM CHECK TAB -->
+        <div class="tab-pane" id="tab-plagiarism">
+          <div class="plag-intro">
+            <div class="plag-intro-icon"><i class="bi bi-shield-check-fill"></i></div>
+            <h3>Document Plagiarism Checker</h3>
+            <p>Check your entire document for potential plagiarism. This tool analyzes sentence-level similarity, identifies common phrases, and highlights sections that may need rephrasing.</p>
+            <button class="btn-primary" onclick="runDocumentPlagiarismCheck()" id="plagCheckBtn">
+              <i class="bi bi-search"></i> <span>Check Entire Document</span>
+            </button>
+          </div>
+          
+          <div id="plagResults" style="display:none;margin-top:20px;">
+            <!-- Overall Score Card -->
+            <div class="plag-score-card">
+              <div class="plag-score-left">
+                <div class="plag-score-ring" id="plagScoreRing">
+                  <svg viewBox="0 0 100 100">
+                    <circle cx="50" cy="50" r="45" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="6"/>
+                    <circle id="plagScoreCircle" cx="50" cy="50" r="45" fill="none" stroke="#10b981" stroke-width="6" 
+                            stroke-dasharray="283" stroke-dashoffset="283" transform="rotate(-90 50 50)" style="transition:stroke-dashoffset 1s ease,stroke 0.3s;"/>
+                  </svg>
+                  <div class="plag-score-num" id="plagScoreNum">0%</div>
+                </div>
+                <div class="plag-score-label" id="plagScoreLabel">Checking...</div>
+              </div>
+              <div class="plag-score-right">
+                <div class="plag-stat">
+                  <i class="bi bi-file-text"></i>
+                  <div><div class="plag-stat-num" id="plagTotalSent">0</div><div class="plag-stat-lbl">Total Sentences</div></div>
+                </div>
+                <div class="plag-stat">
+                  <i class="bi bi-flag-fill"></i>
+                  <div><div class="plag-stat-num" id="plagFlagged">0</div><div class="plag-stat-lbl">Flagged Sections</div></div>
+                </div>
+                <div class="plag-stat">
+                  <i class="bi bi-check-circle-fill"></i>
+                  <div><div class="plag-stat-num" id="plagClean">100%</div><div class="plag-stat-lbl">Clean Content</div></div>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Recommendation -->
+            <div class="plag-recommendation" id="plagRecommendation"></div>
+            
+            <!-- Flagged Sections -->
+            <div class="plag-flagged-wrap" id="plagFlaggedWrap" style="display:none;">
+              <h4><i class="bi bi-exclamation-triangle-fill"></i> Flagged Sections</h4>
+              <p class="plag-flagged-hint">These sections show high similarity scores and may need rephrasing:</p>
+              <div id="plagFlaggedList"></div>
+            </div>
+            
+            <!-- Matched Phrases -->
+            <div class="plag-phrases-wrap" id="plagPhrasesWrap" style="display:none;">
+              <h4><i class="bi bi-chat-square-quote-fill"></i> Common Phrases Detected</h4>
+              <div id="plagPhrasesList"></div>
+            </div>
+          </div>
+        </div>
+
+
+        <!-- AI SUMMARY TAB -->
+        <div class="tab-pane" id="tab-summary">
+
+          <!-- Overall AI Summary -->
+          <div style="font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--t3);margin-bottom:8px;display:flex;align-items:center;gap:5px;"><i class="bi bi-robot"></i> Overall AI Summary</div>
+          <div class="summary-box" style="margin-bottom:24px;">{{ analysis.ai_summary }}</div>
+
+          <!-- Overall Score Banner -->
+          {% set total_score = namespace(val=0) %}
+          {% set p_count = namespace(val=0) %}
+          {% for sec in analysis.sections %}{% if sec.present %}{% set total_score.val = total_score.val + (sec.strength_pct|default(0)) %}{% set p_count.val = p_count.val + 1 %}{% endif %}{% endfor %}
+          {% set avg_score = (total_score.val // p_count.val) if p_count.val > 0 else 0 %}
+
+          <div style="background:linear-gradient(135deg,rgba(99,102,241,.12),rgba(139,92,246,.08));border:1px solid rgba(99,102,241,.25);border-radius:14px;padding:18px 20px;margin-bottom:24px;">
+            <div style="display:flex;align-items:center;gap:20px;flex-wrap:wrap;">
+              <div style="flex:1;min-width:180px;">
+                <div style="font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:#a78bfa;margin-bottom:4px;">Document Completeness</div>
+                <div style="font-size:2.4rem;font-weight:900;color:{{ '#34d399' if avg_score >= 75 else ('#fbbf24' if avg_score >= 50 else '#fb7185') }};">{{ avg_score }}%</div>
+                <div style="font-size:.76rem;color:var(--t2);margin-top:3px;">
+                  {{ p_count.val }} of {{ analysis.sections|length }} sections detected &middot;
+                  {{ analysis.sections|selectattr('strength_level','equalto','strong')|list|length }} strong &middot;
+                  {{ analysis.sections|selectattr('strength_level','equalto','moderate')|list|length }} moderate &middot;
+                  {{ analysis.sections|selectattr('strength_level','equalto','weak')|list|length }} weak
+                </div>
+              </div>
+              <div style="flex-shrink:0;">
+                <div style="font-size:.65rem;color:var(--t3);margin-bottom:6px;text-align:right;">Section Scores</div>
+                {% for sec in analysis.sections %}
+                <div style="display:flex;align-items:center;gap:8px;margin-bottom:5px;justify-content:flex-end;">
+                  <div style="font-size:.71rem;color:var(--t2);min-width:160px;text-align:right;">{{ sec.name }}</div>
+                  <div style="width:80px;height:5px;background:rgba(255,255,255,.07);border-radius:3px;overflow:hidden;"><div style="height:100%;width:{{ sec.strength_pct|default(0) }}%;background:{{ '#34d399' if sec.strength_pct|default(0) >= 75 else ('#fbbf24' if sec.strength_pct|default(0) >= 50 else '#fb7185') }};border-radius:3px;"></div></div>
+                  <div style="font-size:.68rem;font-weight:800;color:{{ '#34d399' if sec.strength_pct|default(0) >= 75 else ('#fbbf24' if sec.strength_pct|default(0) >= 50 else '#fb7185') }};min-width:32px;">{{ sec.strength_pct|default(0) }}%</div>
+                </div>
+                {% endfor %}
+              </div>
+            </div>
+          </div>
+
+          <!-- Section-by-Section Improvement Panel -->
+          <div style="font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--t3);margin-bottom:14px;display:flex;align-items:center;gap:5px;"><i class="bi bi-stars"></i> Section-by-Section AI Improvements &amp; Suggested Content</div>
+
+          <div style="display:flex;flex-direction:column;gap:14px;">
+          {% for sec in analysis.sections %}
+
+          {% set sc = sec.strength_pct|default(0) %}
+          {% set lv = sec.strength_level|default('missing') %}
+          {% set bord = 'rgba(52,211,153,.28)' if lv=='strong' else ('rgba(251,191,36,.28)' if lv=='moderate' else ('rgba(251,113,133,.22)' if lv=='weak' else 'rgba(244,63,94,.22)')) %}
+          {% set clr  = '#34d399' if lv=='strong' else ('#fbbf24' if lv=='moderate' else ('#fb7185' if lv=='weak' else '#f43f5e')) %}
+          {% set ico  = 'check-circle-fill' if lv=='strong' else ('exclamation-circle-fill' if lv=='moderate' else ('exclamation-triangle-fill' if lv=='weak' else 'x-circle-fill')) %}
+
+          <div style="background:rgba(255,255,255,.022);border:1px solid {{ bord }};border-radius:14px;overflow:hidden;">
+
+            <!-- Header (clickable) -->
+            <div onclick="toggleAISec({{ loop.index }})" style="padding:13px 18px;background:rgba(0,0,0,.18);display:flex;align-items:center;gap:12px;cursor:pointer;user-select:none;">
+              <div style="width:32px;height:32px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:.88rem;flex-shrink:0;background:rgba(255,255,255,.05);">
+                <i class="bi bi-{{ ico }}" style="color:{{ clr }};"></i>
+              </div>
+              <div style="flex:1;min-width:0;">
+                <div style="font-size:.88rem;font-weight:800;color:var(--t1);">{{ sec.name }}</div>
+                <div style="font-size:.71rem;color:var(--t2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ sec.completeness_verdict or sec.improvement_hint or 'Click to expand' }}</div>
+              </div>
+              <div style="display:flex;align-items:center;gap:8px;flex-shrink:0;">
+                <!-- Circular score -->
+                <div style="width:46px;height:46px;border-radius:50%;background:conic-gradient({{ clr }} {{ sc * 3.6 }}deg, rgba(255,255,255,.06) 0deg);display:flex;align-items:center;justify-content:center;">
+                  <div style="width:34px;height:34px;border-radius:50%;background:#0d1224;display:flex;align-items:center;justify-content:center;font-size:.68rem;font-weight:900;color:{{ clr }};">{{ sc }}%</div>
+                </div>
+                <span style="font-size:.6rem;font-weight:700;padding:2px 8px;border-radius:20px;text-transform:uppercase;letter-spacing:.07em;background:rgba(255,255,255,.05);color:{{ clr }};border:1px solid {{ bord }};">{{ lv|upper }}</span>
+                <i class="bi bi-chevron-down" id="aichev{{ loop.index }}" style="color:var(--t3);font-size:.78rem;transition:transform .22s;"></i>
+              </div>
+            </div>
+
+            <!-- Expandable Body -->
+            <div id="aibody{{ loop.index }}" style="display:none;padding:18px 20px;border-top:1px solid rgba(255,255,255,.05);">
+
+              <!-- AI Insight Points -->
+              {% if sec.ai_points %}
+              <div style="margin-bottom:16px;">
+                <div style="font-size:.63rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:#a78bfa;margin-bottom:9px;display:flex;align-items:center;gap:5px;"><i class="bi bi-robot"></i> AI Analysis Points</div>
+                {% for pt in sec.ai_points %}
+                <div style="display:flex;align-items:flex-start;gap:8px;margin-bottom:7px;">
+                  <div style="min-width:20px;height:20px;border-radius:50%;background:rgba(99,102,241,.18);display:flex;align-items:center;justify-content:center;font-size:.6rem;font-weight:800;color:#a78bfa;margin-top:2px;flex-shrink:0;">{{ loop.index }}</div>
+                  <div style="font-size:.82rem;color:var(--t2);line-height:1.65;">{{ pt }}</div>
+                </div>
+                {% endfor %}
+              </div>
+              {% endif %}
+
+              <!-- Missing Elements -->
+              {% set all_missing = (sec.missing_elements or []) + (sec.missing_topics or []) %}
+              {% if all_missing %}
+              <div style="margin-bottom:16px;">
+                <div style="font-size:.63rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:#fb7185;margin-bottom:8px;display:flex;align-items:center;gap:5px;"><i class="bi bi-exclamation-triangle-fill"></i> Missing Elements</div>
+                <div style="display:flex;flex-wrap:wrap;gap:6px;">
+                  {% for el in all_missing %}
+                  <span style="background:rgba(244,63,94,.09);border:1px solid rgba(244,63,94,.2);border-radius:20px;padding:3px 10px;font-size:.71rem;font-weight:600;color:#fb7185;">{{ el }}</span>
+                  {% endfor %}
+                </div>
+              </div>
+              {% endif %}
+
+              <!-- Current Content -->
+              {% if sec.original_text %}
+              <div style="margin-bottom:16px;">
+                <div style="font-size:.63rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--t3);margin-bottom:8px;display:flex;align-items:center;gap:5px;"><i class="bi bi-file-text"></i> Current Content</div>
+                <div style="background:rgba(0,0,0,.22);border:1px solid var(--bd);border-radius:9px;padding:12px 14px;font-size:.82rem;color:var(--t2);line-height:1.72;max-height:150px;overflow-y:auto;">{{ sec.original_text[:600] }}{% if sec.original_text|length > 600 %}<span style="color:var(--t3);font-style:italic;"> …</span>{% endif %}</div>
+              </div>
+              {% endif %}
+
+              <!-- Suggested Content to Add -->
+              {% if sec.suggested_content %}
+              <div style="margin-bottom:14px;">
+                <div style="font-size:.63rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:#34d399;margin-bottom:8px;display:flex;align-items:center;justify-content:space-between;">
+                  <span style="display:flex;align-items:center;gap:5px;"><i class="bi bi-stars"></i> AI Suggested Content to Add (fills to 100%)</span>
+                  <button onclick="copyText('aisugg{{ loop.index }}')" style="background:rgba(52,211,153,.1);border:1px solid rgba(52,211,153,.22);border-radius:7px;padding:3px 10px;font-size:.67rem;font-weight:700;color:#34d399;cursor:pointer;display:flex;align-items:center;gap:4px;"><i class="bi bi-clipboard"></i> Copy</button>
+                </div>
+                <div id="aisugg{{ loop.index }}" style="background:rgba(52,211,153,.05);border:1px solid rgba(52,211,153,.18);border-left:3px solid #34d399;border-radius:9px;padding:14px 16px;font-size:.85rem;color:var(--t1);line-height:1.78;">{{ sec.suggested_content }}</div>
+              </div>
+              {% endif %}
+
+              <!-- Full Improved Version: Current + AI suggestions merged -->
+              {% if sec.suggested_content %}
+              <div>
+                <div style="font-size:.63rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:#38bdf8;margin-bottom:8px;display:flex;align-items:center;justify-content:space-between;">
+                  <span style="display:flex;align-items:center;gap:5px;"><i class="bi bi-check2-all"></i> {% if sec.original_text %}Full Improved Version (Current + Improvements = 100%){% else %}Full Draft for Missing Section{% endif %}</span>
+                  <button onclick="copyText('aiimproved{{ loop.index }}')" style="background:rgba(6,182,212,.1);border:1px solid rgba(6,182,212,.22);border-radius:7px;padding:3px 10px;font-size:.67rem;font-weight:700;color:#38bdf8;cursor:pointer;display:flex;align-items:center;gap:4px;"><i class="bi bi-clipboard-check"></i> Copy Full</button>
+                </div>
+                <div id="aiimproved{{ loop.index }}" style="background:rgba(6,182,212,.04);border:1px solid rgba(6,182,212,.16);border-radius:9px;padding:14px 16px;font-size:.85rem;color:var(--t1);line-height:1.78;">{% if sec.original_text %}{{ sec.original_text[:800] }}{% if sec.original_text|length > 800 %}...{% endif %}<br><br><span style="font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#38bdf8;display:block;margin-bottom:8px;">[AI Improvements Added Below]</span>{% endif %}{{ sec.suggested_content }}</div>
+              </div>
+              {% endif %}
+
+            </div><!-- /aibody -->
+          </div><!-- /section card -->
+          {% endfor %}
+          </div><!-- /sections list -->
+
+          <!-- Paper Preview at bottom of AI Summary tab -->
+          <div style="margin-top:28px;">
+            <div style="font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--t3);margin-bottom:12px;display:flex;align-items:center;justify-content:space-between;">
+              <span style="display:flex;align-items:center;gap:5px;"><i class="bi bi-file-earmark-text-fill"></i> Original Uploaded Document Preview</span>
+              <a href="/download-paper" style="background:rgba(99,102,241,.1);border:1px solid rgba(99,102,241,.22);border-radius:7px;padding:4px 12px;font-size:.68rem;font-weight:700;color:#a78bfa;text-decoration:none;display:flex;align-items:center;gap:4px;"><i class="bi bi-download"></i> Download</a>
+            </div>
+            <div style="background:rgba(255,255,255,.02);border:1px solid var(--bd);border-radius:var(--r);overflow:hidden;">
+              <div style="padding:10px 16px;background:rgba(255,255,255,.03);border-bottom:1px solid var(--bd);display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+                <div style="font-size:.8rem;font-weight:600;color:var(--t2);display:flex;align-items:center;gap:6px;">
+                  <i class="bi bi-file-earmark-text-fill" style="color:#a78bfa;"></i>
+                  {{ paper.filename or paper.title }}
+                </div>
+                <span style="margin-left:auto;font-size:.72rem;color:var(--t3);">{{ analysis.pages }} pages &middot; {{ analysis.word_count|default('---') }} words &middot; {{ paper.file_type|upper if paper.file_type else 'DOC' }}</span>
+              </div>
+              {% if paper.file_type == 'pdf' %}
+              <iframe src="/serve-paper#toolbar=0&navpanes=0&scrollbar=1" style="width:100%;height:680px;border:none;background:#1a1a2e;" title="Document Preview"></iframe>
+              {% elif analysis.raw_text %}
+              <div style="padding:20px 22px;font-family:'JetBrains Mono',monospace;font-size:.8rem;line-height:1.8;color:var(--t2);max-height:680px;overflow-y:auto;white-space:pre-wrap;word-break:break-word;background:rgba(0,0,0,.2);">{{ analysis.raw_text[:6000] }}{% if analysis.raw_text|length > 6000 %}<span style="color:var(--t3);font-style:italic;"> [Showing first 6000 characters]</span>{% endif %}</div>
+              {% else %}
+              <div style="padding:40px;text-align:center;color:var(--t3);">
+                <i class="bi bi-file-earmark-text" style="font-size:2.5rem;display:block;margin-bottom:12px;opacity:.35;"></i>
+                <div style="font-size:.85rem;">Preview not available &mdash; <a href="/download-paper" style="color:#a78bfa;">download the document</a> to view it.</div>
+              </div>
+              {% endif %}
+            </div>
+          </div>
+
+        </div>
+
+        <!-- ENTITIES TAB -->
+        <div class="tab-pane" id="tab-entities">
+          {% if analysis.entities %}
+          <div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:14px;">
+            {% for entity in analysis.entities %}
+            {% set bc = {'PERSON':'bp','ORG':'bo','GPE':'bg','DATE':'bd2','LOC':'bl','MONEY':'bm'} %}
+            <span class="entity-badge {{ bc.get(entity.label,'bx') }}">
+              <i class="bi bi-dot" style="font-size:1rem;"></i>{{ entity.text }}<small style="opacity:.7;font-size:.65rem;">{{ entity.label }}</small>
+            </span>
+            {% endfor %}
+          </div>
+          <div style="font-size:.75rem;color:var(--t3);"><i class="bi bi-info-circle"></i> {{ analysis.entities|length }} entities via spaCy NER</div>
+          {% else %}
+          <div class="empty-state"><div class="empty-ico"><i class="bi bi-person-badge"></i></div><h3>No Entities Found</h3><p>No named entities detected.</p></div>
+          {% endif %}
+        </div>
+
+        <!-- KEYWORDS TAB -->
+        <div class="tab-pane" id="tab-keywords">
+          {% if analysis.keywords %}
+          <div class="kw-grid">
+            {% for kw in analysis.keywords %}<div class="kw-item"><div class="kw-name">{{ kw.name }}</div><div class="kw-freq">{{ kw.frequency }}×</div></div>{% endfor %}
+          </div>
+          {% else %}
+          <div class="empty-state"><div class="empty-ico"><i class="bi bi-key"></i></div><h3>No Keywords</h3><p>No keywords extracted.</p></div>
+          {% endif %}
+        </div>
+
+        <!-- CITATIONS TAB -->
+        <div class="tab-pane" id="tab-citations">
+          {% if analysis.citations %}
+          <div class="scroll-tbl">
+            <table class="data-table">
+              <thead><tr><th>#</th><th>Author(s)</th><th>Year</th><th>Type</th></tr></thead>
+              <tbody>
+                {% for c in analysis.citations %}
+                <tr>
+                  <td style="font-family:'JetBrains Mono',monospace;font-size:.7rem;color:var(--t3);">{{ loop.index }}</td>
+                  <td style="font-weight:600;color:var(--t1);">{{ c.authors }}</td>
+                  <td><span class="bdg-a">{{ c.year }}</span></td>
+                  <td><span class="bdg-g">{{ c.type or 'Journal' }}</span></td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+          <div style="font-size:.75rem;color:var(--t3);margin-top:10px;"><i class="bi bi-info-circle"></i> {{ analysis.citations|length }} references detected · <a href="/citations" style="color:#a78bfa;">Build citation network →</a></div>
+          {% else %}
+          <div class="empty-state"><div class="empty-ico"><i class="bi bi-journals"></i></div><h3>No Citations Found</h3><p>Use [Author, Year] or (Author Year) format.</p></div>
+          {% endif %}
+        </div>
+
+        <!-- SUGGESTED PAPERS TAB -->
+        <div class="tab-pane" id="tab-suggest">
+          {% if analysis.suggested_papers %}
+          <div style="font-size:.8rem;color:var(--t2);margin-bottom:14px;"><i class="bi bi-lightbulb-fill" style="color:#fbbf24;"></i> Papers to read next — curated by Groq LLaMA based on this paper's topics and keywords</div>
+          <div class="sug-list">
+            {% for p in analysis.suggested_papers %}
+            <div class="sug-card">
+              <div class="sug-title">{{ p.title }}</div>
+              <div class="sug-meta">{{ p.authors }} · {{ p.year }} · {{ p.venue }}</div>
+              <div class="sug-rel">{{ p.relevance }}</div>
+              {% if p.topic %}<span class="sug-topic"><i class="bi bi-tag-fill"></i> {{ p.topic }}</span>{% endif %}
+            </div>
+            {% endfor %}
+          </div>
+          {% else %}
+          <div class="empty-state"><div class="empty-ico"><i class="bi bi-lightbulb"></i></div><h3>No Suggestions Available</h3><p>Paper suggestions could not be generated. Try re-analyzing.</p></div>
+          {% endif %}
+        </div>
+
+      </div><!-- /tabs card -->
+
+      <!-- EXPORT -->
+      <div class="card">
+        <div class="card-header">
+          <h3 class="card-title"><div class="ti ti-green"><i class="bi bi-download"></i></div>Export Analysis</h3>
+          <span class="card-tag tag-green">Download</span>
+        </div>
+        <div class="card-body">
+          <div class="exp-row">
+            <button class="exp-btn eb-blue" onclick="downloadJSON()"><i class="bi bi-filetype-json"></i> Full JSON</button>
+            <button class="exp-btn eb-green" onclick="downloadSummaryTXT()"><i class="bi bi-file-text-fill"></i> Summary TXT</button>
+            <button class="exp-btn eb-amber" onclick="downloadCitationsCSV()"><i class="bi bi-filetype-csv"></i> Citations CSV</button>
+            <a href="/download-paper" class="exp-btn" style="background:rgba(244,63,94,.1);border-color:rgba(244,63,94,.25);color:#fb7185;" download>
+              <i class="bi bi-file-earmark-pdf-fill"></i> Original Paper
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <!-- NEXT STEPS -->
+      <div class="card">
+        <div class="card-header">
+          <h3 class="card-title"><div class="ti ti-indigo"><i class="bi bi-arrow-right-circle-fill"></i></div>Continue Your Research</h3>
+        </div>
+        <div class="card-body">
+          <div class="ns-grid">
+            <a href="/gap-finder" class="ns-card"><span class="ns-icon">🔍</span><div><div class="ns-label">Gap Finder</div><div class="ns-desc">Find under-researched areas</div></div></a>
+            <a href="/literature" class="ns-card"><span class="ns-icon">📝</span><div><div class="ns-label">Literature Review</div><div class="ns-desc">Generate structured review</div></div></a>
+            <a href="/citations" class="ns-card"><span class="ns-icon">📖</span><div><div class="ns-label">Citation Tracker</div><div class="ns-desc">Map citation network</div></div></a>
+          </div>
+        </div>
+      </div>
+
+      {% else %}
+      <div class="card">
+        <div class="card-body">
+          <div class="empty-state">
+            <div class="empty-ico"><i class="bi bi-file-earmark-pdf"></i></div>
+            <h3>Upload a Paper to Begin</h3>
+            <p>The analyzer extracts all sections (Abstract → Conclusion), generates AI summaries for each one, detects entities, finds citations, and suggests related papers to read next.</p>
+          </div>
+        </div>
+      </div>
+      {% endif %}
+
+    </div><!-- /main-col -->
+  </div><!-- /page-wrap -->
+
+  <!-- ══════════════════════════════════════
+       LEXIS — FLOATING AI ASSISTANT
+  ══════════════════════════════════════ -->
+
+  <!-- Backdrop -->
+  <div class="lexis-backdrop" id="lexisBackdrop" onclick="closeLexis()"></div>
+
+  <!-- Trigger Button -->
+  <button class="lexis-trigger" id="lexisTrigger" onclick="toggleLexis()">
+    <div class="lexis-trigger-avatar">
+      ✦
+      <span class="lexis-online"></span>
+      <span class="lexis-badge" id="lexisBadge" style="display:none;">1</span>
+    </div>
+    <div class="lexis-trigger-text">
+      <div class="lexis-trigger-name">Lexis</div>
+      <div class="lexis-trigger-hint">AI Research Assistant</div>
+    </div>
+    <i class="bi bi-chevron-up lexis-chevron" id="lexisChevron"></i>
+  </button>
+
+  <!-- Bottom Sheet Panel -->
+  <div class="lexis-panel" id="lexisPanel">
+
+    <!-- Drag handle -->
+    <div class="lexis-handle-wrap" id="lexisHandle">
+      <div class="lexis-handle"></div>
+    </div>
+
+    <!-- Header -->
+    <div class="lexis-header">
+      <div class="lexis-avatar">
+        ✦
+        <div class="lexis-avatar-dot"></div>
+      </div>
+      <div>
+        <div class="lexis-name">Lexis</div>
+        <div class="lexis-title">NLP Research Intelligence Assistant</div>
+      </div>
+      <div class="lexis-status">Online</div>
+      <button class="lexis-close" onclick="closeLexis()"><i class="bi bi-x"></i></button>
+    </div>
+
+    <!-- Quick prompt chips -->
+    <div class="lexis-chips">
+      <button class="lexis-chip" onclick="sendChip('What is this paper about?')">📄 Summary</button>
+      <button class="lexis-chip" onclick="sendChip('What methodology does this paper use?')">⚙️ Methodology</button>
+      <button class="lexis-chip" onclick="sendChip('What are the key findings?')">🔍 Key Findings</button>
+      <button class="lexis-chip" onclick="sendChip('What are the limitations of this paper?')">⚠️ Limitations</button>
+      <button class="lexis-chip" onclick="sendChip('What future work do the authors suggest?')">🚀 Future Work</button>
+      <button class="lexis-chip" onclick="sendChip('Who are the main entities mentioned?')">🏷️ Entities</button>
+    </div>
+
+    <!-- Messages -->
+    <div class="lexis-msgs" id="lexisMsgs">
+      <div class="lmsg-wrap">
+        <div class="lmsg-ico ai">✦</div>
+        <div>
+          <div class="lmsg-bubble ai">
+            {% if analysis_complete %}
+            Hi! I'm <strong>Lexis</strong> — I've read <em>{{ paper.title }}</em> in full. Ask me anything about it: sections, methodology, findings, limitations, or any specific part of the paper.
+            {% else %}
+            Hi! I'm <strong>Lexis</strong>, your NLP research assistant. Upload a paper above and I'll read it for you — then you can ask me anything about it.
+            {% endif %}
+          </div>
+          <div class="lmsg-time">just now</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Input area -->
+    <div class="lexis-input-area">
+      <div class="lexis-input-row">
+        <input type="text" id="lexisInput" placeholder="Ask Lexis about the paper…" autocomplete="off">
+        <button class="lexis-send" id="lexisSend"><i class="bi bi-send-fill"></i></button>
+      </div>
+      <div class="lexis-footer-note">Powered by Groq LLaMA 3.3 70B · RAG-grounded answers</div>
+    </div>
+
+  </div><!-- /lexis-panel -->
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    /* UPLOAD */
+    const uz=document.getElementById('uploadZone'), fi=document.getElementById('fileInput');
+    if(uz&&fi){
+      uz.addEventListener('dragover',e=>{e.preventDefault();uz.classList.add('drag');});
+      uz.addEventListener('dragleave',()=>uz.classList.remove('drag'));
+      uz.addEventListener('drop',e=>{e.preventDefault();uz.classList.remove('drag');fi.files=e.dataTransfer.files;showFile(fi.files[0]);});
+      fi.addEventListener('change',e=>{if(e.target.files[0])showFile(e.target.files[0]);});
+    }
+    function showFile(f){uz.innerHTML=`<i class="bi bi-check-circle-fill upload-icon" style="color:#34d399;"></i><div class="upload-title" style="color:#34d399;">${f.name}</div><p class="upload-desc">Ready</p>`;uz.classList.add('has-file');}
+    const pf=document.getElementById('paperForm');
+    if(pf)pf.addEventListener('submit',()=>{const b=document.getElementById('analyzeBtn');b.innerHTML='<i class="bi bi-hourglass-split"></i> Analyzing… 20–30 seconds';b.disabled=true;});
+
+    /* TABS */
+    function switchTab(id,btn){
+      document.querySelectorAll('.tab-pane').forEach(p=>p.classList.remove('active'));
+      document.querySelectorAll('#mainTabNav .tab-btn').forEach(b=>b.classList.remove('active'));
+      const t=document.getElementById(id);if(t)t.classList.add('active');
+      if(btn)btn.classList.add('active');
+    }
+
+    /* SECTION ACCORDION */
+    function toggleSec(id){const el=document.getElementById(id);if(el)el.classList.toggle('open');}
+    function toggleAISec(n){
+      const body=document.getElementById('aibody'+n);
+      const chev=document.getElementById('aichev'+n);
+      if(!body) return;
+      const open = body.style.display==='block';
+      body.style.display = open ? 'none' : 'block';
+      if(chev) chev.style.transform = open ? '' : 'rotate(180deg)';
+    }
+    // Auto-open first section
+    document.addEventListener('DOMContentLoaded',function(){
+      const first=document.getElementById('aibody1');
+      const chev=document.getElementById('aichev1');
+      if(first){first.style.display='block';}
+      if(chev){chev.style.transform='rotate(180deg)';}
+    });
+
+    document.querySelectorAll('.sec-card.present').forEach((el,i)=>{if(i===0)el.classList.add('open');});
+
+    /* ── LEXIS FLOATING ASSISTANT ── */
+    const lexisPanel   = document.getElementById('lexisPanel');
+    const lexisBackdrop= document.getElementById('lexisBackdrop');
+    const lexisTrigger = document.getElementById('lexisTrigger');
+    const lexisChevron = document.getElementById('lexisChevron');
+    const lexisMsgs    = document.getElementById('lexisMsgs');
+    const lexisInput   = document.getElementById('lexisInput');
+    const lexisSend    = document.getElementById('lexisSend');
+    const lexisBadge   = document.getElementById('lexisBadge');
+    let lexisOpen      = false;
+    let msgCount       = 0;
+
+    function openLexis() {
+      lexisOpen = true;
+      lexisPanel.classList.add('open');
+      lexisBackdrop.classList.add('visible');
+      lexisTrigger.classList.add('open');
+      lexisBadge.style.display = 'none';
+      setTimeout(() => lexisInput.focus(), 380);
+    }
+
+    function closeLexis() {
+      lexisOpen = false;
+      lexisPanel.classList.remove('open');
+      lexisBackdrop.classList.remove('visible');
+      lexisTrigger.classList.remove('open');
+    }
+
+    function toggleLexis() {
+      lexisOpen ? closeLexis() : openLexis();
+    }
+
+    // Close on Escape
+    document.addEventListener('keydown', e => { if (e.key === 'Escape' && lexisOpen) closeLexis(); });
+
+    // Drag-to-dismiss
+    let dragStart = 0;
+    const handle = document.getElementById('lexisHandle');
+    if (handle) {
+      handle.addEventListener('touchstart', e => { dragStart = e.touches[0].clientY; }, {passive:true});
+      handle.addEventListener('touchmove',  e => {
+        const dy = e.touches[0].clientY - dragStart;
+        if (dy > 60) closeLexis();
+      }, {passive:true});
+    }
+
+    function getTime() {
+      return new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+    }
+
+    function addLexisMsg(text, role) {
+      const wrap = document.createElement('div');
+      wrap.className = `lmsg-wrap ${role === 'user' ? 'user' : ''}`;
+      const ico = role === 'user' ? '👤' : '✦';
+      const icoClass = role === 'user' ? 'user' : 'ai';
+      wrap.innerHTML = `
+        <div class="lmsg-ico ${icoClass}">${ico}</div>
+        <div>
+          <div class="lmsg-bubble ${role === 'user' ? 'user' : 'ai'}">${text}</div>
+          <div class="lmsg-time">${getTime()}</div>
+        </div>`;
+      lexisMsgs.appendChild(wrap);
+      lexisMsgs.scrollTop = lexisMsgs.scrollHeight;
+      return wrap;
+    }
+
+    function addTyping() {
+      const wrap = document.createElement('div');
+      wrap.className = 'lmsg-wrap';
+      wrap.innerHTML = `<div class="lmsg-ico ai">✦</div><div class="lmsg-bubble ai"><div class="ltyping"><div class="ltyping-dot"></div><div class="ltyping-dot"></div><div class="ltyping-dot"></div></div></div>`;
+      lexisMsgs.appendChild(wrap);
+      lexisMsgs.scrollTop = lexisMsgs.scrollHeight;
+      return wrap;
+    }
+
+    async function sendLexis(q) {
+      q = (q || lexisInput.value || '').trim();
+      if (!q) return;
+      if (!lexisOpen) openLexis();
+
+      addLexisMsg(q, 'user');
+      lexisInput.value = '';
+      lexisSend.disabled = true;
+
+      const typing = addTyping();
+
+      try {
+        const r = await fetch('/research_chat', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({message: q})
+        });
+        const data = await r.json();
+        typing.remove();
+        addLexisMsg(data.reply || data.error || 'No response.', 'ai');
+
+        // Show badge if panel closed
+        if (!lexisOpen) {
+          lexisBadge.style.display = 'flex';
+        }
+      } catch(e) {
+        typing.remove();
+        addLexisMsg('❌ Connection error. Please try again.', 'ai');
+      }
+
+      lexisSend.disabled = false;
+      if (lexisOpen) lexisInput.focus();
+    }
+
+    function sendChip(text) { sendLexis(text); }
+
+    lexisSend.addEventListener('click', () => sendLexis());
+    lexisInput.addEventListener('keypress', e => { if (e.key === 'Enter') sendLexis(); });
+
+    // Show badge after 2s if paper loaded
+    {% if analysis_complete %}
+    setTimeout(() => {
+      if (!lexisOpen) {
+        lexisBadge.textContent = '1';
+        lexisBadge.style.display = 'flex';
+      }
+    }, 2000);
+    
+    // ✅ Store full text for plagiarism checker
+    window.paperFullText = {{ (analysis.full_text or analysis.raw_text or '') | tojson }};
+    console.log('✅ Paper text stored for plagiarism checker');
+    {% endif %}
+
+    /* TITLE SUGGESTIONS */
+    const TV_ORIGINAL = {{ paper.title | tojson }};
+    let tvSelectedTitle = null;
+
+    async function generateTitleSuggestions() {
+      const btn      = document.getElementById('tvGenBtn');
+      const loading  = document.getElementById('tvLoading');
+      const results  = document.getElementById('tvResults');
+      const errBox   = document.getElementById('tvError');
+      const applyBar = document.getElementById('tvApplyBar');
+
+      btn.disabled = true;
+      btn.innerHTML = '<i class="bi bi-hourglass-split"></i> Generating…';
+      loading.style.display  = 'block';
+      results.style.display  = 'none';
+      errBox.style.display   = 'none';
+      applyBar.style.display = 'none';
+      tvSelectedTitle = null;
+
+      try {
+        const res  = await fetch('/title-suggestions', {
+          method: 'POST',
+          headers: {'Content-Type':'application/json'},
+          body: JSON.stringify({title: TV_ORIGINAL})
+        });
+        const data = await res.json();
+        if (data.error) throw new Error(data.error);
+
+        tvRenderGroup('tvShorterCards', data.variants.shorter, 'short');
+        tvRenderGroup('tvSimilarCards', data.variants.similar, 'sim');
+        tvRenderGroup('tvLongerCards',  data.variants.longer,  'long');
+
+        loading.style.display = 'none';
+        results.style.display = 'block';
+
+      } catch(err) {
+        loading.style.display = 'none';
+        errBox.textContent = '⚠️ ' + (err.message || 'Could not generate suggestions. Please try again.');
+        errBox.style.display = 'block';
+      }
+
+      btn.disabled = false;
+      btn.innerHTML = '<i class="bi bi-arrow-clockwise"></i> Regenerate Suggestions';
+    }
+
+    function tvRenderGroup(containerId, items, type) {
+      const c = document.getElementById(containerId);
+      c.innerHTML = '';
+      if (!items || !items.length) {
+        c.innerHTML = '<p style="color:var(--t3);font-size:.8rem;padding:8px 0;">No suggestions available.</p>';
+        return;
+      }
+      const wcColors = {
+        short:'background:rgba(6,182,212,.12);color:#38bdf8;border:1px solid rgba(6,182,212,.25);',
+        sim:  'background:rgba(245,158,11,.12);color:#fbbf24;border:1px solid rgba(245,158,11,.25);',
+        long: 'background:rgba(16,185,129,.12);color:#34d399;border:1px solid rgba(16,185,129,.25);'
+      };
+      items.forEach((item, i) => {
+        const card = document.createElement('div');
+        card.className = 'tv-card-item';
+        card.style.cssText = 'background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.09);border-radius:12px;padding:13px 16px;display:flex;align-items:flex-start;gap:12px;transition:all .2s;cursor:pointer;';
+        card.innerHTML = `
+          <div style="width:22px;height:22px;border-radius:6px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.09);font-size:.65rem;font-weight:800;color:var(--t3);display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;">${i+1}</div>
+          <div style="flex:1;min-width:0;">
+            <div style="font-size:.88rem;font-weight:600;color:var(--t1);line-height:1.45;margin-bottom:5px;">${tvEsc(item.title)}</div>
+            <div style="font-size:.73rem;color:var(--t2);line-height:1.5;margin-bottom:7px;">${tvEsc(item.note||'')}</div>
+            <span style="font-size:.65rem;font-weight:700;padding:2px 9px;border-radius:20px;${wcColors[type]}"><i class="bi bi-hash"></i> ${item.words} words</span>
+          </div>
+          <button onclick="event.stopPropagation();tvCopy(this,'${tvEscAttr(item.title)}')" style="background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.09);border-radius:7px;padding:4px 10px;font-size:.68rem;font-weight:600;color:var(--t2);cursor:pointer;transition:all .2s;display:flex;align-items:center;gap:4px;flex-shrink:0;white-space:nowrap;">
+            <i class="bi bi-clipboard"></i> Copy
+          </button>`;
+        card.addEventListener('click', function() { tvSelectCard(this, item.title); });
+        card.addEventListener('mouseenter', function() {
+          if (!this.classList.contains('tv-selected')) {
+            this.style.background  = 'rgba(99,102,241,.07)';
+            this.style.borderColor = 'rgba(99,102,241,.3)';
+            this.style.transform   = 'translateX(3px)';
+          }
+        });
+        card.addEventListener('mouseleave', function() {
+          if (!this.classList.contains('tv-selected')) {
+            this.style.background  = 'rgba(255,255,255,.03)';
+            this.style.borderColor = 'rgba(255,255,255,.09)';
+            this.style.transform   = 'none';
+          }
+        });
+        c.appendChild(card);
+      });
+    }
+
+    function tvSelectCard(card, title) {
+      document.querySelectorAll('.tv-card-item').forEach(c => {
+        c.classList.remove('tv-selected');
+        c.style.background  = 'rgba(255,255,255,.03)';
+        c.style.borderColor = 'rgba(255,255,255,.09)';
+        c.style.transform   = 'none';
+      });
+      card.classList.add('tv-selected');
+      card.style.background  = 'rgba(99,102,241,.12)';
+      card.style.borderColor = 'rgba(99,102,241,.45)';
+      tvSelectedTitle = title;
+      const bar = document.getElementById('tvApplyBar');
+      document.getElementById('tvApplyText').textContent = title;
+      bar.style.display = 'flex';
+      bar.scrollIntoView({behavior:'smooth', block:'nearest'});
+    }
+
+    function applyTitleSelection() {
+      if (!tvSelectedTitle) return;
+      const titleDisplay = document.getElementById('paperTitleDisplay');
+      if (titleDisplay) titleDisplay.textContent = tvSelectedTitle;
+      const cur = document.getElementById('tvCurrentTitle');
+      if (cur) cur.textContent = tvSelectedTitle;
+      const wc = document.getElementById('tvCurrentWC');
+      if (wc) wc.innerHTML = `<i class="bi bi-hash"></i> ${tvSelectedTitle.split(' ').length} words`;
+      const bar = document.getElementById('tvApplyBar');
+      bar.style.background = 'rgba(16,185,129,.18)';
+      const applyBtn = bar.querySelector('button');
+      const orig = applyBtn.innerHTML;
+      applyBtn.innerHTML = '<i class="bi bi-check2-all"></i> Applied!';
+      setTimeout(() => { bar.style.background=''; applyBtn.innerHTML=orig; }, 1600);
+    }
+
+    function tvCopy(btn, title) {
+      navigator.clipboard.writeText(title).then(() => {
+        const orig = btn.innerHTML;
+        btn.innerHTML = '<i class="bi bi-check2"></i> Copied!';
+        btn.style.cssText += 'background:rgba(16,185,129,.15);color:#34d399;border-color:rgba(16,185,129,.3);';
+        setTimeout(() => { btn.innerHTML=orig; btn.style.background=''; btn.style.color=''; btn.style.borderColor=''; }, 2000);
+      });
+    }
+
+    function tvEsc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+    function tvEscAttr(s){ return String(s).replace(/\\/g,'\\\\').replace(/'/g,"\\'"); }
+    /* END TITLE SUGGESTIONS */
+
+    /* EXPORT */
+    const analysisData={{ analysis | tojson }};
+    const paperData={{ paper | tojson }};
+    function dlBlob(content,name,type){const b=new Blob([content],{type});const u=URL.createObjectURL(b);const a=document.createElement('a');a.href=u;a.download=name;a.click();URL.revokeObjectURL(u);}
+    function downloadJSON(){dlBlob(JSON.stringify({paper:paperData,analysis:analysisData},null,2),'paper_analysis.json','application/json');}
+    function downloadSummaryTXT(){
+      let t=`PAPER ANALYSIS\n${'='.repeat(50)}\nTitle: ${paperData.title}\nAuthors: ${paperData.authors}\n\nAI SUMMARY\n${analysisData.ai_summary}\n\nSECTIONS\n${'-'.repeat(30)}\n`;
+      (analysisData.sections||[]).forEach(s=>{t+=`\n[${s.present?'✓':'✗'}] ${s.name}\n${s.content}\n`;if(s.present&&s.ai_summary)t+=`AI: ${s.ai_summary}\n`;});
+      dlBlob(t,'paper_analysis.txt','text/plain');
+    }
+    function downloadCitationsCSV(){
+      if(!analysisData.citations||!analysisData.citations.length){alert('No citations.');return;}
+      const rows=[['#','Authors','Year','Type']];
+      analysisData.citations.forEach((c,i)=>rows.push([i+1,c.authors,c.year,c.type||'Journal']));
+      dlBlob(rows.map(r=>r.map(v=>`"${String(v).replace(/"/g,'""')}"`).join(',')).join('\n'),'citations.csv','text/csv');
+    }
+
+    /* ── REPHRASE & PLAGIARISM ── */
+    let rephraseMode = 'academic';
+
+    function setMode(mode, btn) {
+      rephraseMode = mode;
+      document.querySelectorAll('.mode-pill').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+    }
+
+    function switchTabById(id) {
+      document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+      document.querySelectorAll('#mainTabNav .tab-btn').forEach(b => {
+        b.classList.remove('active');
+        const oc = b.getAttribute('onclick') || '';
+        if (oc.includes("'" + id + "'")) b.classList.add('active');
+      });
+      const t = document.getElementById(id); if(t) t.classList.add('active');
+    }
+
+    async function callRephrase(text, section) {
+      const resp = await fetch('/rephrase', {
+        method: 'POST', headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({text, mode: rephraseMode, section})
+      });
+      return await resp.json();
+    }
+
+    async function rephraseCustom() {
+      const input = document.getElementById('rephraseInput').value.trim();
+      if (!input) { alert('Please paste some text first.'); return; }
+      const btn = document.getElementById('rephraseBtn');
+      const loading = document.getElementById('rephraseLoading');
+      const errBox  = document.getElementById('rephraseError');
+      btn.disabled = true; btn.innerHTML = '<i class="bi bi-hourglass-split"></i> Rephrasing…';
+      loading.style.display = 'block'; errBox.style.display = 'none';
+      document.getElementById('rephraseOutput').value = '';
+      try {
+        const data = await callRephrase(input, '');
+        if (data.error) throw new Error(data.error);
+        document.getElementById('rephraseOutput').value = data.rephrased;
+        document.getElementById('fullWordDiff').textContent = data.original_words + ' → ' + data.rephrased_words + ' words';
+      } catch(e) {
+        errBox.textContent = '⚠️ ' + e.message; errBox.style.display = 'block';
+      }
+      btn.disabled = false; btn.innerHTML = '<i class="bi bi-stars"></i> Rephrase';
+      loading.style.display = 'none';
+    }
+
+    async function rephraseSection(idx, text, section) {
+      const btn  = document.querySelector('#rw' + idx + ' .btn-sec-rephrase');
+      const body = document.getElementById('rb' + idx);
+      const out  = document.getElementById('ro' + idx);
+      const diff = document.getElementById('wdiff' + idx);
+      btn.disabled = true; btn.innerHTML = '<i class="bi bi-hourglass-split"></i> Rephrasing…';
+      body.classList.add('visible');
+      out.textContent = 'Rephrasing…';
+      try {
+        const data = await callRephrase(text, section);
+        if (data.error) throw new Error(data.error);
+        out.textContent = data.rephrased;
+        diff.textContent = data.original_words + ' → ' + data.rephrased_words + ' words';
+        out._origText = text;
+      } catch(e) { out.textContent = '⚠️ ' + e.message; }
+      btn.disabled = false; btn.innerHTML = '<i class="bi bi-stars"></i> Rephrase';
+    }
+
+    function copyTextById(elId) {
+      const el = document.getElementById(elId);
+      navigator.clipboard.writeText(el.value || el.textContent).then(() => {
+        el.style.borderColor = 'rgba(16,185,129,.6)';
+        setTimeout(() => el.style.borderColor = '', 1500);
+      });
+    }
+
+    function copyEl(elId) {
+      const el = document.getElementById(elId);
+      if (!el) return;
+      const text = el.value !== undefined ? el.value : el.innerText;
+      navigator.clipboard.writeText(text).then(() => {
+        const btn = el.previousElementSibling?.querySelector('button') || document.activeElement;
+        const orig = btn.innerHTML;
+        btn.innerHTML = '<i class="bi bi-check2"></i> Copied!';
+        btn.style.color = '#34d399';
+        setTimeout(() => { btn.innerHTML = orig; btn.style.color = ''; }, 1800);
+      });
+    }
+
+    function copyText(elId) {
+      const el = document.getElementById(elId);
+      navigator.clipboard.writeText(el.textContent).then(() => {
+        el.style.borderColor = 'rgba(16,185,129,.6)';
+        setTimeout(() => el.style.borderColor = '', 1500);
+      });
+    }
+
+    async function runPlagCheck(original, rephrased, resultContainerId, switchToTab) {
+      try {
+        const resp = await fetch('/plagiarism-check', {
+          method: 'POST', headers: {'Content-Type':'application/json'},
+          body: JSON.stringify({original, rephrased})
+        });
+        const data = await resp.json();
+        if (data.error) throw new Error(data.error);
+        const riskColors = {low:'#34d399', medium:'#fbbf24', high:'#fb923c', critical:'#f43f5e'};
+        const color = riskColors[data.risk] || '#94a3b8';
+        const pct   = data.similarity;
+        const dash  = (pct / 100) * 201;
+        if (switchToTab) {
+          switchTabById('tab-plagiarism');
+          document.getElementById('plagEmpty').style.display = 'none';
+          document.getElementById('plagMainResult').style.display = 'block';
+          document.getElementById('plagScoreWrap').innerHTML =
+            '<div class="plag-ring"><svg width="80" height="80" viewBox="0 0 80 80">' +
+            '<circle cx="40" cy="40" r="32" fill="none" stroke="rgba(255,255,255,.07)" stroke-width="8"/>' +
+            '<circle cx="40" cy="40" r="32" fill="none" stroke="' + color + '" stroke-width="8" stroke-dasharray="' + dash + ' 201" stroke-linecap="round" transform="rotate(-90 40 40)"/></svg>' +
+            '<div class="plag-ring-num"><span class="plag-pct" style="color:' + color + ';">' + pct + '%</span><span class="plag-lbl">similar</span></div></div>' +
+            '<div><div class="plag-info-title plag-risk-' + data.risk + '">' + data.risk_label + '</div>' +
+            '<div class="plag-info-sub">' + data.orig_words + ' original words · ' + data.reph_words + ' rephrased words</div>' +
+            '<div style="font-size:.75rem;color:var(--t3);margin-top:6px;"><i class="bi bi-info-circle"></i> N-gram fingerprint similarity</div></div>';
+          const mp = document.getElementById('plagMatchedPhrases');
+          if (data.matched_phrases && data.matched_phrases.length) {
+            mp.innerHTML = '<div style="font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.09em;color:var(--t3);margin:14px 0 8px;"><i class="bi bi-exclamation-circle"></i> Matched Phrases</div>' +
+              data.matched_phrases.map(p => '<span class="matched-phrase">' + p + '</span>').join('');
+          } else { mp.innerHTML = '<div style="font-size:.8rem;color:var(--t3);margin-top:12px;"><i class="bi bi-check-circle-fill" style="color:#34d399;"></i> No significant phrase matches found.</div>'; }
+          const es = document.getElementById('plagExactSentences');
+          if (data.exact_sentences && data.exact_sentences.length) {
+            es.innerHTML = '<div style="font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.09em;color:var(--t3);margin:14px 0 8px;"><i class="bi bi-exclamation-triangle-fill"></i> High-Overlap Sentences</div>' +
+              data.exact_sentences.map(s => '<div style="background:rgba(244,63,94,.06);border:1px solid rgba(244,63,94,.18);border-radius:8px;padding:8px 12px;font-size:.8rem;color:#fb7185;margin-bottom:6px;font-family:monospace;">' + s + '…</div>').join('');
+          } else { es.innerHTML = ''; }
+        } else if (resultContainerId) {
+          const el = document.getElementById(resultContainerId);
+          if (el) {
+            el.style.display = 'block';
+            el.innerHTML = '<div style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:rgba(255,255,255,.03);border:1px solid var(--bd);border-radius:9px;margin-top:6px;">' +
+              '<div style="width:38px;height:38px;border-radius:50%;border:3px solid ' + color + ';display:flex;align-items:center;justify-content:center;font-size:.78rem;font-weight:800;color:' + color + ';flex-shrink:0;">' + pct + '%</div>' +
+              '<div><div style="font-size:.82rem;font-weight:700;color:' + color + ';">' + data.risk_label + '</div>' +
+              '<div style="font-size:.72rem;color:var(--t3);">n-gram similarity · <button onclick="switchTabById(\'tab-plagiarism\')" style="background:none;border:none;color:#a78bfa;font-size:.72rem;cursor:pointer;padding:0;">Full report →</button></div></div></div>';
+          }
+        }
+      } catch(e) { console.error('Plagiarism check error:', e); }
+    }
+
+    function checkPlagCustom() {
+      const orig = document.getElementById('rephraseInput').value.trim();
+      const reph = document.getElementById('rephraseOutput').value.trim();
+      if (!orig || !reph) { alert('Rephrase some text first.'); return; }
+      runPlagCheck(orig, reph, null, true);
+    }
+
+    function checkPlagSection(idx, originalText) {
+      const out = document.getElementById('ro' + idx);
+      const rephrased = out && out.textContent && out.textContent.trim();
+      if (!rephrased || rephrased === 'Rephrasing…') { alert('Rephrase the section first.'); return; }
+      runPlagCheck(originalText, rephrased, 'plagResult' + idx, false);
+    }
+
+    const repInput = document.getElementById('rephraseInput');
+    if (repInput) {
+      repInput.addEventListener('input', function() {
+        const wc = this.value.trim().split(/\s+/).filter(Boolean).length;
+        document.getElementById('rephraseWordCount').textContent = wc ? wc + ' words' : '';
+      });
+      if (repInput.value) {
+        const wc = repInput.value.trim().split(/\s+/).filter(Boolean).length;
+        document.getElementById('rephraseWordCount').textContent = wc ? wc + ' words' : '';
+      }
+    }
+    /* ── END REPHRASE & PLAGIARISM ── */
+
+    // ═══════════════════════════════════════════════════════
+    // DOCUMENT PLAGIARISM CHECKER
+    // ═══════════════════════════════════════════════════════
+
+    async function runDocumentPlagiarismCheck() {
+      const btn = document.getElementById('plagCheckBtn');
+      const results = document.getElementById('plagResults');
+      
+      // Get full paper text
+      const paperText = window.paperFullText;
+      
+      if (!paperText) {
+        showToast('Please upload and analyze a paper first', 'error');
+        return;
+      }
+      
+      // Show loading state
+      btn.disabled = true;
+      btn.innerHTML = '<i class="bi bi-hourglass-split"></i> <span>Analyzing Document...</span>';
+      results.style.display = 'block';
+      document.getElementById('plagScoreNum').textContent = '...';
+      document.getElementById('plagScoreLabel').textContent = 'Analyzing...';
+      
+      try {
+        const response = await fetch('/check-document-plagiarism', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ text: paperText })
+        });
+        
+        const data = await response.json();
+        
+        if (data.error) {
+          showToast(data.error, 'error');
+          return;
+        }
+        
+        // Update score ring with animation
+        const similarity = data.overall_similarity;
+        const circumference = 283;
+        const offset = circumference - (similarity / 100) * circumference;
+        
+        const circle = document.getElementById('plagScoreCircle');
+        circle.style.strokeDashoffset = offset;
+        
+        // Color based on risk
+        let ringColor, labelBg, labelColor;
+        if (data.risk === 'low') {
+          ringColor = '#10b981';
+          labelBg = 'rgba(16,185,129,.15)';
+          labelColor = '#34d399';
+        } else if (data.risk === 'medium') {
+          ringColor = '#f59e0b';
+          labelBg = 'rgba(245,158,11,.15)';
+          labelColor = '#fbbf24';
+        } else if (data.risk === 'high') {
+          ringColor = '#f97316';
+          labelBg = 'rgba(249,115,22,.15)';
+          labelColor = '#fb923c';
+        } else {
+          ringColor = '#f43f5e';
+          labelBg = 'rgba(244,63,94,.15)';
+          labelColor = '#fb7185';
+        }
+        
+        circle.style.stroke = ringColor;
+        document.getElementById('plagScoreNum').textContent = similarity + '%';
+        document.getElementById('plagScoreNum').style.color = ringColor;
+        
+        const label = document.getElementById('plagScoreLabel');
+        label.textContent = data.risk_label;
+        label.style.background = labelBg;
+        label.style.color = labelColor;
+        
+        // Update stats with animation
+        animateNumber('plagTotalSent', 0, data.total_sentences, 800);
+        animateNumber('plagFlagged', 0, data.flagged_count, 800);
+        setTimeout(() => {
+          document.getElementById('plagClean').textContent = data.stats.clean_percentage + '%';
+        }, 400);
+        
+        // Update recommendation
+        const recDiv = document.getElementById('plagRecommendation');
+        recDiv.innerHTML = `
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
+            <i class="bi bi-lightbulb-fill" style="font-size:1.3rem;color:#fbbf24;"></i>
+            <strong style="font-size:.9rem;color:var(--t1);">Recommendation</strong>
+          </div>
+          <p style="margin:0;font-size:.85rem;color:var(--t2);line-height:1.6;">${data.recommendation}</p>
+        `;
+        
+        // Show flagged sections with preview
+        if (data.flagged_sections && data.flagged_sections.length > 0) {
+          document.getElementById('plagFlaggedWrap').style.display = 'block';
+          const list = document.getElementById('plagFlaggedList');
+          list.innerHTML = data.flagged_sections.map(section => `
+            <div class="plag-flagged-item">
+              <div class="plag-flagged-header">
+                <span class="plag-flagged-pos"><i class="bi bi-geo-alt-fill"></i> ${section.position}</span>
+                <span class="plag-flagged-score">${section.similarity_score}% similarity</span>
+              </div>
+              <div class="plag-flagged-text">"${section.text}"</div>
+              ${section.matched_phrases && section.matched_phrases.length > 0 ? `
+                <div class="plag-flagged-phrases">
+                  <small style="color:var(--t3);font-size:.7rem;margin-right:6px;">Matched phrases:</small>
+                  ${section.matched_phrases.map(p => `<span class="plag-phrase-tag">"${p}"</span>`).join('')}
+                </div>
+              ` : ''}
+            </div>
+          `).join('');
+        } else {
+          document.getElementById('plagFlaggedWrap').style.display = 'none';
+        }
+        
+        // Show matched phrases
+        if (data.matched_phrases && data.matched_phrases.length > 0) {
+          document.getElementById('plagPhrasesWrap').style.display = 'block';
+          const phrasesList = document.getElementById('plagPhrasesList');
+          phrasesList.innerHTML = data.matched_phrases
+            .map(phrase => `<span class="plag-common-phrase">"${phrase}"</span>`)
+            .join('');
+        } else {
+          document.getElementById('plagPhrasesWrap').style.display = 'none';
+        }
+        
+        showToast('✅ Plagiarism check complete!', 'success');
+        
+      } catch (error) {
+        console.error('Plagiarism check error:', error);
+        showToast('Failed to check plagiarism: ' + error.message, 'error');
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="bi bi-search"></i> <span>Check Again</span>';
+      }
+    }
+
+
+    /* TOAST NOTIFICATION */
+    function showToast(msg, type) {
+      let t = document.getElementById('_toast');
+      if (!t) {
+        t = document.createElement('div');
+        t.id = '_toast';
+        t.style.cssText = 'position:fixed;bottom:24px;right:24px;background:rgba(15,20,40,.95);border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:11px 17px;font-size:.82rem;color:var(--t1);z-index:9999;transform:translateY(80px);opacity:0;transition:all .33s;backdrop-filter:blur(20px);display:flex;align-items:center;gap:8px;';
+        document.body.appendChild(t);
+      }
+      t.innerHTML = (type === 'success' ? '✅' : type === 'error' ? '❌' : 'ℹ️') + ' ' + msg;
+      t.style.borderColor = type === 'success' ? 'rgba(16,185,129,.4)' : type === 'error' ? 'rgba(244,63,94,.4)' : 'rgba(99,102,241,.4)';
+      t.style.transform = 'translateY(0)'; t.style.opacity = '1';
+      setTimeout(() => { t.style.transform = 'translateY(80px)'; t.style.opacity = '0'; }, 3500);
+    }
+    // Helper function to animate numbers
+    function animateNumber(elementId, start, end, duration) {
+      const element = document.getElementById(elementId);
+      if (!element) return;
+      
+      const range = end - start;
+      const increment = range / (duration / 16);
+      let current = start;
+      
+      const timer = setInterval(() => {
+        current += increment;
+        if ((increment > 0 && current >= end) || (increment < 0 && current <= end)) {
+          current = end;
+          clearInterval(timer);
+        }
+        element.textContent = Math.round(current);
+      }, 16);
+    }
+
+  </script>
+  <!--
+  ══════════════════════════════════════════════════════════════════
+  BACKEND CHANGES NEEDED (Flask / Python)
+  ══════════════════════════════════════════════════════════════════
+
+  1. SAVE UPLOADED FILE — store the original file so it can be served:
+     session['uploaded_paper_path'] = saved_filepath
+     paper['filename']  = original_filename
+     paper['file_type'] = 'pdf' | 'docx' | 'txt'
+
+  2. NEW ROUTES needed:
+
+     @app.route('/serve-paper')
+     def serve_paper():
+         path = session.get('uploaded_paper_path')
+         return send_file(path, mimetype='application/pdf')  # or text/plain
+
+     @app.route('/download-paper')
+     def download_paper():
+         path = session.get('uploaded_paper_path')
+         return send_file(path, as_attachment=True,
+                          download_name=session.get('paper_filename', 'paper.pdf'))
+
+  3. SECTION STRENGTH — for each section in analysis.sections, add:
+     sec['strength_level'] = 'strong' | 'moderate' | 'weak' | 'missing'
+     sec['strength_pct']   = int (0–100)
+     sec['improvement_hint'] = 'Specific suggestion for this section...'
+     sec['ai_points']      = ['Point 1 about section', 'Point 2...', 'Point 3...']
+                              (3–5 bullet points instead of one paragraph)
+
+     Scoring logic example:
+       word_count = len(sec['content'].split())
+       if   word_count > 200:  strength='strong',  pct=90
+       elif word_count > 80:   strength='moderate', pct=58
+       elif word_count > 20:   strength='weak',     pct=28
+       else:                   strength='missing',  pct=0
+
+  4. AI POINTS — update your Groq prompt for each section to return bullet points:
+     prompt: "Analyze the {section_name} of this paper. Return exactly 4 bullet points:
+              1. What this section covers
+              2. Its key strength
+              3. Any gap or weakness
+              4. One specific improvement suggestion
+              Keep each point under 30 words."
+     Then split on newlines and store as sec['ai_points'] list.
+
+  5. WORD COUNT — add to analysis object:
+     analysis['word_count'] = len(full_text.split())
+     analysis['raw_text']   = full_text  (used for text preview of non-PDFs)
+  ══════════════════════════════════════════════════════════════════
+  -->
+</body>
+</html>

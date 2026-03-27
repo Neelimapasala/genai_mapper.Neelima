@@ -1,0 +1,178 @@
+{#
+  page_nav.html — Secondary navigation bar
+  Set {% set current_page = 'map' %} (or dashboard/research/benchmark/etc.) before including this.
+#}
+
+<style>
+/* ═══════════════════════════════════════
+   PAGE NAV BAR
+═══════════════════════════════════════ */
+.page-nav {
+  position: sticky;
+  top: 0;
+  z-index: 190;
+  background: #0d1117;
+  border-bottom: 1px solid rgba(255,255,255,.07);
+  height: 42px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 20px;
+  gap: 12px;
+  overflow: hidden;
+  box-shadow: 0 1px 0 rgba(255,255,255,.03);
+}
+
+/* ── Left nav links ── */
+.pnav-links {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  list-style: none;
+  overflow-x: auto;
+  scrollbar-width: none;
+  flex: 1;
+  min-width: 0;
+}
+.pnav-links::-webkit-scrollbar { display: none; }
+
+.pnav-links li { flex-shrink: 0; }
+
+.pnav-links a {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 11px;
+  border-radius: 7px;
+  font-size: 0.76rem;
+  font-weight: 500;
+  color: rgba(148,163,184,.75);
+  text-decoration: none;
+  white-space: nowrap;
+  transition: all .18s;
+  border: 1px solid transparent;
+  font-family: 'DM Sans', 'Inter', sans-serif;
+}
+
+.pnav-links a i {
+  font-size: 0.72rem;
+  opacity: .8;
+}
+
+.pnav-links a:hover {
+  color: #e4e9f7;
+  background: rgba(255,255,255,.06);
+  border-color: rgba(255,255,255,.06);
+}
+
+.pnav-links a.pnav-active {
+  background: rgba(99,102,241,.2);
+  border-color: rgba(99,102,241,.4);
+  color: #a78bfa;
+  font-weight: 700;
+}
+
+/* separator dot */
+.pnav-sep {
+  width: 3px; height: 3px; border-radius: 50%;
+  background: rgba(255,255,255,.15);
+  flex-shrink: 0;
+  margin: 0 2px;
+}
+
+/* ── Right: prev / next ── */
+.pnav-pager {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.pnav-pager a {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 12px;
+  border-radius: 7px;
+  font-size: 0.74rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition: all .18s;
+  white-space: nowrap;
+  font-family: 'DM Sans', 'Inter', sans-serif;
+}
+
+.pnav-prev {
+  color: rgba(148,163,184,.75);
+  background: rgba(255,255,255,.04);
+  border: 1px solid rgba(255,255,255,.06);
+}
+.pnav-prev:hover { color: #e4e9f7; background: rgba(255,255,255,.08); }
+
+.pnav-next {
+  background: rgba(99,102,241,.2);
+  border: 1px solid rgba(99,102,241,.35);
+  color: #a78bfa;
+}
+.pnav-next:hover { background: rgba(99,102,241,.3); color: #c4b5fd; }
+
+@media (max-width: 768px) {
+  .page-nav { padding: 0 12px; }
+  .pnav-pager { display: none; }
+}
+</style>
+
+{% set _pages = [
+  ('/',            'home',        'bi-house-fill',                  'Home'),
+  ('/map',         'map',         'bi-diagram-2-fill',              'Map'),
+  ('/dashboard',   'dashboard',   'bi-speedometer2',                'Dashboard'),
+  ('/research',    'research',    'bi-file-earmark-text-fill',      'Paper Analyzer'),
+  ('/benchmark',   'benchmark',   'bi-trophy-fill',                 'Benchmark'),
+  ('/datasets',    'datasets',    'bi-collection-fill',             'Datasets'),
+  ('/citations',   'citations',   'bi-bookmarks-fill',              'Citations'),
+  ('/gap-finder',  'gap-finder',  'bi-binoculars-fill',             'Gap Finder'),
+  ('/literature',  'literature',  'bi-file-earmark-richtext-fill',  'Literature Review'),
+  ('/history',     'history',     'bi-clock-history',               'History'),
+  ('/about',       'about',       'bi-info-circle-fill',            'About'),
+  ('/contact',     'contact',     'bi-envelope-fill',               'Contact'),
+] %}
+
+{# ── compute prev/next for pager ── #}
+{% set _current_idx = namespace(val=0) %}
+{% for _url, _key, _icon, _label in _pages %}
+  {% if _key == current_page %}{% set _current_idx.val = loop.index0 %}{% endif %}
+{% endfor %}
+
+{% set _prev = _pages[_current_idx.val - 1] if _current_idx.val > 0 else none %}
+{% set _next = _pages[_current_idx.val + 1] if _current_idx.val < _pages|length - 1 else none %}
+
+<nav class="page-nav">
+
+  <!-- Left: all page links -->
+  <ul class="pnav-links">
+    {% for _url, _key, _icon, _label in _pages %}
+      {% if not loop.first %}<li class="pnav-sep"></li>{% endif %}
+      <li>
+        <a href="{{ _url }}" class="{{ 'pnav-active' if _key == current_page else '' }}">
+          <i class="bi {{ _icon }}"></i>
+          {{ _label }}
+        </a>
+      </li>
+    {% endfor %}
+  </ul>
+
+  <!-- Right: prev / next page -->
+  <div class="pnav-pager">
+    {% if _prev %}
+    <a href="{{ _prev[0] }}" class="pnav-prev">
+      <i class="bi bi-arrow-left"></i> {{ _prev[3] }}
+    </a>
+    {% endif %}
+    {% if _next %}
+    <a href="{{ _next[0] }}" class="pnav-next">
+      {{ _next[3] }} <i class="bi bi-arrow-right"></i>
+    </a>
+    {% endif %}
+  </div>
+
+</nav>

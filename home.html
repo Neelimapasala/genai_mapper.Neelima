@@ -1,0 +1,1054 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GenAI Knowledge Mapper — NLP Research Platform</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Oxanium:wght@300;400;500;600;700;800&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+<style>
+/* ══════════════════════════════════════════════════
+   TOKENS
+══════════════════════════════════════════════════ */
+:root{
+  --void:#020510;
+  --deep:#04091a;
+  --layer:#070e24;
+  --glass:rgba(5,10,30,0.65);
+  --glass2:rgba(255,255,255,0.035);
+  --bd:rgba(255,255,255,0.07);
+  --bd2:rgba(255,255,255,0.13);
+
+  /* Core palette */
+  --v:#5b3fff;   /* violet */
+  --v2:#8b5cf6;
+  --c:#00c8ff;   /* electric cyan */
+  --c2:#38bdf8;
+  --g:#00ffb3;   /* matrix green */
+  --g2:#10b981;
+  --em:#ff4d6d;  /* hot rose accent */
+  --am:#f59e0b;  /* amber */
+
+  --vg:rgba(91,63,255,0.4);
+  --cg:rgba(0,200,255,0.3);
+  --gg:rgba(0,255,179,0.25);
+
+  --t1:#e8f0ff;
+  --t2:#7b8db0;
+  --t3:#3d4f70;
+
+  --fd:'Oxanium',sans-serif;
+  --fb:'DM Sans',sans-serif;
+  --fm:'DM Mono',monospace;
+
+  --sh:0 8px 40px rgba(0,0,0,0.6);
+  --sh2:0 24px 80px rgba(0,0,0,0.7);
+}
+
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;}
+body{font-family:'DM Sans',sans-serif;background:var(--void);color:var(--t1);overflow-x:hidden;-webkit-font-smoothing:antialiased;}
+
+/* Fine grain noise */
+body::after{content:'';position:fixed;inset:0;z-index:9998;pointer-events:none;opacity:.022;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");background-size:200px;}
+
+::-webkit-scrollbar{width:4px;}
+::-webkit-scrollbar-track{background:var(--void);}
+::-webkit-scrollbar-thumb{background:rgba(91,63,255,0.4);border-radius:4px;}
+
+
+/* ══════════════════════════════════════════════════
+   ANIMATED BACKGROUND — CSS only, no canvas
+══════════════════════════════════════════════════ */
+.bg-anim {
+  position: fixed; inset: 0; z-index: 0; pointer-events: none;
+  background: #020817;
+  overflow: hidden;
+}
+/* Three large soft blobs animated purely with CSS */
+.bg-anim::before {
+  content: '';
+  position: absolute; inset: -40%;
+  background:
+    radial-gradient(ellipse 55% 45% at 20% 25%,  rgba(67, 56, 202, 0.25) 0%, transparent 65%),
+    radial-gradient(ellipse 45% 55% at 80% 20%,  rgba(14, 116, 144, 0.18) 0%, transparent 60%),
+    radial-gradient(ellipse 50% 40% at 65% 80%,  rgba(49,  46, 129, 0.22) 0%, transparent 65%),
+    radial-gradient(ellipse 40% 50% at 15% 75%,  rgba(30,  64, 175, 0.15) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 30% at 50% 50%,  rgba(17,  24,  39, 0.8)  0%, transparent 100%);
+  animation: bgShift 18s ease-in-out infinite alternate;
+}
+@keyframes bgShift {
+  0%   { transform: translate(0%,    0%)   scale(1);    }
+  25%  { transform: translate(2%,   -1.5%) scale(1.02); }
+  50%  { transform: translate(-1.5%, 2%)   scale(1.03); }
+  75%  { transform: translate(1.5%,  1%)   scale(1.01); }
+  100% { transform: translate(-2%,  -1%)   scale(1.02); }
+}
+/* Subtle dot grid overlay */
+.bg-anim::after {
+  content: '';
+  position: absolute; inset: 0;
+  background-image: radial-gradient(circle, rgba(148,163,184,0.07) 1px, transparent 1px);
+  background-size: 44px 44px;
+  animation: gridFade 8s ease-in-out infinite alternate;
+}
+@keyframes gridFade {
+  from { opacity: 0.5; }
+  to   { opacity: 1;   }
+}
+
+
+/* ══════════════════════════════════════════════════
+   NAVBAR
+══════════════════════════════════════════════════ */
+.topnav{
+  position:fixed;top:0;left:0;right:0;z-index:600;
+  height:62px;display:flex;align-items:center;padding:0 40px;
+  transition:background .5s,backdrop-filter .5s,border-color .5s;
+}
+.topnav.scrolled{
+  background:rgba(2,5,16,0.88);
+  backdrop-filter:blur(28px);-webkit-backdrop-filter:blur(28px);
+  border-bottom:1px solid rgba(91,63,255,0.2);
+  box-shadow:0 1px 0 rgba(0,200,255,0.05),0 2px 30px rgba(0,0,0,0.5);
+}
+.nav-brand{display:flex;align-items:center;gap:11px;text-decoration:none;flex-shrink:0;}
+.brand-core{
+  width:38px;height:38px;border-radius:11px;position:relative;
+  background:linear-gradient(135deg,var(--v),var(--c));
+  display:flex;align-items:center;justify-content:center;font-size:1.05rem;
+  box-shadow:0 0 24px var(--vg),0 0 48px rgba(0,200,255,0.15);
+  overflow:hidden;
+}
+.brand-core::before{
+  content:'';position:absolute;inset:0;
+  background:linear-gradient(45deg,transparent 40%,rgba(255,255,255,0.2) 50%,transparent 60%);
+  animation:sheen 3.5s ease-in-out infinite;
+}
+@keyframes sheen{0%,100%{transform:translateX(-100%);}50%{transform:translateX(100%);}}
+.brand-text{font-family:'Oxanium',sans-serif;font-size:1.08rem;font-weight:700;letter-spacing:-.01em;color:var(--t1);}
+.brand-dot{color:var(--c);}
+
+.nav-links{display:flex;align-items:center;gap:1px;list-style:none;margin-left:28px;}
+.nav-links a{padding:6px 13px;border-radius:8px;font-size:.82rem;font-weight:500;color:var(--t2);text-decoration:none;transition:all .2s;display:flex;align-items:center;gap:5px;letter-spacing:.01em;}
+.nav-links a:hover{color:var(--t1);background:rgba(255,255,255,0.05);}
+.nav-links .dropdown{position:relative;}
+.nav-links .drop-menu{position:absolute;top:calc(100% + 10px);left:0;background:rgba(4,9,26,0.97);backdrop-filter:blur(32px);border:1px solid var(--bd2);border-radius:14px;padding:6px;min-width:230px;display:none;box-shadow:0 32px 80px rgba(0,0,0,0.8),0 0 0 1px rgba(91,63,255,0.1);}
+.nav-links .dropdown:hover .drop-menu{display:block;}
+.drop-item{display:flex;align-items:center;gap:10px;padding:9px 13px;border-radius:9px;font-size:.81rem;color:var(--t2);text-decoration:none;transition:all .2s;}
+.drop-item:hover{color:var(--t1);background:rgba(255,255,255,0.05);}
+.drop-item .di{width:24px;height:24px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:.72rem;flex-shrink:0;}
+.drop-div{border-color:var(--bd);margin:4px 0;}
+.nav-ml{margin-left:auto;display:flex;align-items:center;gap:10px;}
+.btn-docs{padding:7px 18px;border-radius:8px;border:1px solid rgba(255,255,255,0.09);color:var(--t2);font-size:.81rem;font-weight:500;text-decoration:none;transition:all .2s;}
+.btn-docs:hover{border-color:rgba(0,200,255,0.3);color:var(--c);}
+.btn-get{
+  padding:9px 24px;border-radius:50px;font-size:.83rem;font-weight:700;
+  background:linear-gradient(135deg,var(--v),var(--c));
+  color:#fff;text-decoration:none;letter-spacing:.02em;
+  font-family:'Oxanium',sans-serif;
+  display:flex;align-items:center;gap:7px;
+  box-shadow:0 0 24px var(--vg),0 4px 20px rgba(0,200,255,0.2);
+  transition:all .3s;position:relative;overflow:hidden;
+}
+.btn-get::before{content:'';position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(255,255,255,0.12),transparent);transform:translateX(-100%);transition:transform .5s;}
+.btn-get:hover::before{transform:translateX(100%);}
+.btn-get:hover{transform:translateY(-2px);box-shadow:0 0 36px var(--vg),0 8px 32px rgba(0,200,255,0.3);color:#fff;}
+
+/* ══════════════════════════════════════════════════
+   HERO
+══════════════════════════════════════════════════ */
+#hero{
+  min-height:100vh;display:flex;align-items:center;
+  position:relative;z-index:2;
+  padding:120px 40px 80px;
+}
+.hero-inner{max-width:1240px;margin:0 auto;width:100%;display:grid;grid-template-columns:1fr 500px;gap:72px;align-items:center;}
+
+/* Eyebrow */
+.hero-ey{
+  display:inline-flex;align-items:center;gap:9px;
+  background:rgba(91,63,255,0.1);border:1px solid rgba(91,63,255,0.3);
+  border-radius:50px;padding:5px 16px 5px 7px;
+  font-size:.7rem;font-weight:600;color:var(--v2);letter-spacing:.09em;text-transform:uppercase;
+  margin-bottom:26px;font-family:'DM Mono',monospace;
+  animation:riseIn .8s ease both;
+}
+.ey-pulse{
+  width:24px;height:24px;border-radius:50%;
+  background:linear-gradient(135deg,var(--v),var(--c));
+  display:flex;align-items:center;justify-content:center;font-size:.6rem;color:#fff;
+  animation:pulseRing 2.2s ease-in-out infinite;
+  box-shadow:0 0 0 0 var(--vg);
+}
+@keyframes pulseRing{0%,100%{box-shadow:0 0 0 0 rgba(91,63,255,0.6);}50%{box-shadow:0 0 0 8px rgba(91,63,255,0);}}
+
+/* Heading */
+.hero-h1{
+  font-family:'Oxanium',sans-serif;
+  font-size:clamp(2.6rem,5.2vw,4.6rem);
+  font-weight:800;line-height:1.06;letter-spacing:-.04em;
+  margin-bottom:10px;
+}
+.h1-static{color:var(--t1);}
+.h1-typed-wrap{
+  display:block;min-height:1.2em;
+  background:linear-gradient(90deg,var(--v),var(--c),var(--g));
+  background-size:200% auto;
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  background-clip:text;
+  animation:gshift 5s linear infinite;
+}
+@keyframes gshift{from{background-position:0% center;}to{background-position:200% center;}}
+.cursor{display:inline-block;width:3px;height:.85em;background:var(--c);border-radius:2px;margin-left:3px;vertical-align:middle;animation:blink .7s step-end infinite;}
+@keyframes blink{0%,100%{opacity:1;}50%{opacity:0;}}
+.h1-sub{display:block;color:var(--t2);font-size:clamp(1.4rem,2.5vw,1.9rem);font-weight:400;margin-top:6px;}
+
+.hero-desc{font-size:1.04rem;line-height:1.82;color:var(--t2);max-width:520px;margin-bottom:38px;animation:riseIn .9s .18s ease both;}
+
+/* Buttons */
+.hero-btns{display:flex;gap:13px;flex-wrap:wrap;margin-bottom:48px;animation:riseIn .9s .28s ease both;}
+.btn-prime{
+  display:inline-flex;align-items:center;gap:10px;padding:15px 36px;border-radius:50px;
+  background:linear-gradient(135deg,var(--v),var(--v2));color:#fff;
+  font-size:.94rem;font-weight:700;text-decoration:none;
+  font-family:'Oxanium',sans-serif;letter-spacing:.01em;
+  box-shadow:0 8px 32px var(--vg);
+  transition:all .3s;position:relative;overflow:hidden;
+}
+.btn-prime::after{content:'';position:absolute;inset:0;background:radial-gradient(circle at 50% 50%,rgba(255,255,255,0.15),transparent 70%);opacity:0;transition:opacity .3s;}
+.btn-prime:hover{transform:translateY(-3px);box-shadow:0 12px 48px var(--vg);color:#fff;}
+.btn-prime:hover::after{opacity:1;}
+.btn-sec{
+  display:inline-flex;align-items:center;gap:10px;padding:15px 36px;border-radius:50px;
+  border:1px solid rgba(0,200,255,0.25);color:var(--c2);
+  font-size:.94rem;font-weight:600;text-decoration:none;
+  font-family:'Oxanium',sans-serif;letter-spacing:.01em;
+  transition:all .3s;background:rgba(0,200,255,0.04);
+}
+.btn-sec:hover{border-color:rgba(0,200,255,0.6);background:rgba(0,200,255,0.08);transform:translateY(-3px);color:var(--c);}
+
+/* Trust bar */
+.trust{display:flex;align-items:center;gap:16px;flex-wrap:wrap;animation:riseIn .9s .38s ease both;}
+.trust-lbl{font-size:.7rem;color:var(--t3);font-weight:500;white-space:nowrap;font-family:'DM Mono',monospace;}
+.trust-pills{display:flex;gap:7px;flex-wrap:wrap;}
+.tp{font-size:.67rem;font-weight:600;padding:4px 11px;border-radius:20px;border:1px solid var(--bd);color:var(--t3);font-family:'DM Mono',monospace;transition:all .2s;}
+.tp:hover{border-color:rgba(0,200,255,0.4);color:var(--c);}
+
+@keyframes riseIn{from{opacity:0;transform:translateY(26px);}to{opacity:1;transform:translateY(0);}}
+
+/* ══════════════════════════════════════════════════
+   LIVE DEMO CARD
+══════════════════════════════════════════════════ */
+.demo-wrap{animation:riseIn .9s .22s ease both;position:relative;}
+.demo-wrap::before{
+  content:'';position:absolute;inset:-2px;border-radius:22px;
+  background:linear-gradient(135deg,var(--v),var(--c),var(--g),var(--v));
+  background-size:300% 300%;
+  animation:borderSpin 4s linear infinite;
+  z-index:-1;filter:blur(8px);opacity:.5;
+}
+@keyframes borderSpin{0%{background-position:0% 50%;}50%{background-position:100% 50%;}100%{background-position:0% 50%;}}
+
+.demo-card{
+  background:rgba(4,9,26,0.92);
+  border:1px solid rgba(91,63,255,0.3);
+  border-radius:20px;
+  backdrop-filter:blur(32px);
+  box-shadow:var(--sh2),0 0 80px rgba(91,63,255,0.08);
+  overflow:hidden;
+  position:relative;
+}
+/* Animated scan line */
+.demo-card::before{
+  content:'';position:absolute;left:0;right:0;height:1px;
+  background:linear-gradient(90deg,transparent,var(--c),transparent);
+  animation:scan 3s ease-in-out infinite;z-index:5;pointer-events:none;opacity:.6;
+}
+@keyframes scan{0%{top:-2px;opacity:0;}10%{opacity:.8;}90%{opacity:.8;}100%{top:100%;opacity:0;}}
+
+.demo-bar{
+  padding:13px 18px;border-bottom:1px solid var(--bd);
+  display:flex;align-items:center;gap:10px;
+  background:rgba(255,255,255,0.02);
+}
+.d-dots{display:flex;gap:6px;}
+.ddot{width:10px;height:10px;border-radius:50%;}
+.d1{background:#ff5f57;box-shadow:0 0 8px #ff5f57;} .d2{background:#febc2e;box-shadow:0 0 8px #febc2e;} .d3{background:#28c840;box-shadow:0 0 8px #28c840;}
+.demo-live{
+  display:flex;align-items:center;gap:5px;
+  margin-left:auto;font-size:.68rem;font-weight:600;color:var(--g);
+  font-family:'DM Mono',monospace;letter-spacing:.1em;
+}
+.live-dot{width:6px;height:6px;border-radius:50%;background:var(--g);box-shadow:0 0 6px var(--g);animation:lblink 1.5s ease-in-out infinite;}
+@keyframes lblink{0%,100%{opacity:1;}50%{opacity:.3;}}
+
+.demo-body{padding:18px;}
+.dlbl{font-size:.6rem;font-weight:700;text-transform:uppercase;letter-spacing:.14em;color:var(--t3);margin-bottom:9px;display:flex;align-items:center;gap:7px;font-family:'DM Mono',monospace;}
+.dlbl::before{content:'';width:14px;height:1px;background:currentColor;opacity:.5;}
+
+/* Text box */
+.demo-txt{
+  background:rgba(0,0,0,0.35);border:1px solid rgba(255,255,255,0.05);
+  border-radius:10px;padding:13px;font-family:'DM Mono',monospace;
+  font-size:.77rem;line-height:1.75;color:var(--t2);min-height:88px;
+  margin-bottom:14px;transition:opacity .35s ease;position:relative;
+}
+.hl-p{background:rgba(0,255,179,0.12);color:#00ffb3;border-radius:4px;padding:1px 5px;border-bottom:1.5px solid rgba(0,255,179,0.35);}
+.hl-o{background:rgba(91,63,255,0.15);color:#a78bfa;border-radius:4px;padding:1px 5px;border-bottom:1.5px solid rgba(91,63,255,0.4);}
+.hl-d{background:rgba(0,200,255,0.12);color:#38bdf8;border-radius:4px;padding:1px 5px;border-bottom:1.5px solid rgba(0,200,255,0.35);}
+.hl-l{background:rgba(255,77,109,0.12);color:#ff7096;border-radius:4px;padding:1px 5px;border-bottom:1.5px solid rgba(255,77,109,0.35);}
+
+/* Entity badges */
+.demo-ents{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px;min-height:60px;}
+.ent{display:inline-flex;align-items:center;gap:4px;font-size:.68rem;font-weight:600;padding:4px 10px;border-radius:20px;border:1px solid;font-family:'DM Mono',monospace;}
+.ep{background:rgba(0,255,179,.09);color:#00ffb3;border-color:rgba(0,255,179,.28);}
+.eo{background:rgba(91,63,255,.1);color:#a78bfa;border-color:rgba(91,63,255,.3);}
+.ed{background:rgba(0,200,255,.09);color:#38bdf8;border-color:rgba(0,200,255,.28);}
+.el{background:rgba(255,77,109,.09);color:#ff7096;border-color:rgba(255,77,109,.28);}
+
+/* Metric chips */
+.demo-mets{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;}
+.dm{background:rgba(255,255,255,0.03);border:1px solid var(--bd);border-radius:10px;padding:10px;text-align:center;}
+.dm-n{font-family:'Oxanium',sans-serif;font-size:1.45rem;font-weight:800;line-height:1;}
+.dm-l{font-size:.55rem;color:var(--t3);text-transform:uppercase;letter-spacing:.1em;margin-top:4px;font-family:'DM Mono',monospace;}
+
+/* Progress bar */
+.demo-progress{margin-top:12px;}
+.prog-row{display:flex;justify-content:space-between;align-items:center;font-size:.65rem;font-family:'DM Mono',monospace;color:var(--t3);margin-bottom:5px;}
+.prog-bar{height:3px;background:rgba(255,255,255,0.07);border-radius:2px;overflow:hidden;}
+.prog-fill{height:100%;border-radius:2px;background:linear-gradient(90deg,var(--v),var(--c));transition:width .8s ease;}
+
+/* ══════════════════════════════════════════════════
+   SCROLLING TICKER
+══════════════════════════════════════════════════ */
+.ticker-wrap{
+  position:relative;z-index:3;
+  border-top:1px solid var(--bd);border-bottom:1px solid var(--bd);
+  background:rgba(2,5,16,0.7);backdrop-filter:blur(10px);
+  padding:11px 0;overflow:hidden;
+}
+.ticker-wrap::before,.ticker-wrap::after{content:'';position:absolute;top:0;bottom:0;width:140px;z-index:2;pointer-events:none;}
+.ticker-wrap::before{left:0;background:linear-gradient(90deg,var(--void),transparent);}
+.ticker-wrap::after{right:0;background:linear-gradient(-90deg,var(--void),transparent);}
+.ticker-track{display:flex;width:max-content;animation:tkr 28s linear infinite;}
+@keyframes tkr{from{transform:translateX(0);}to{transform:translateX(-50%);}}
+.ti{display:inline-flex;align-items:center;gap:10px;padding:0 24px;font-family:'DM Mono',monospace;font-size:.7rem;color:var(--t3);white-space:nowrap;}
+.ti .til{color:var(--t2);}
+.ti-sep{color:var(--v);opacity:.5;font-size:.9rem;}
+
+/* ══════════════════════════════════════════════════
+   STATS BAND
+══════════════════════════════════════════════════ */
+.sb-wrap{background:var(--deep);border-top:1px solid var(--bd);border-bottom:1px solid var(--bd);padding:48px 40px;position:relative;z-index:2;}
+.sb{max-width:1240px;margin:0 auto;display:grid;grid-template-columns:repeat(5,1fr);}
+.sb-item{text-align:center;padding:8px 20px;border-right:1px solid var(--bd);position:relative;overflow:hidden;}
+.sb-item:last-child{border-right:none;}
+.sb-item::after{content:'';position:absolute;bottom:0;left:50%;transform:translateX(-50%);width:0;height:2px;background:linear-gradient(90deg,var(--v),var(--c));transition:width .4s;}
+.sb-item:hover::after{width:80%;}
+.sb-num{font-family:'Oxanium',sans-serif;font-size:2.8rem;font-weight:800;letter-spacing:-.05em;display:block;background:linear-gradient(135deg,var(--v2),var(--c));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;line-height:1;transition:filter .3s;}
+.sb-item:hover .sb-num{filter:drop-shadow(0 0 12px var(--c));}
+.sb-lbl{font-size:.68rem;color:var(--t3);font-weight:500;text-transform:uppercase;letter-spacing:.12em;margin-top:7px;font-family:'DM Mono',monospace;}
+
+/* ══════════════════════════════════════════════════
+   SECTION SCAFFOLDING
+══════════════════════════════════════════════════ */
+.s{padding:96px 40px;position:relative;z-index:2;}
+.s-alt{padding:96px 40px;background:var(--layer);position:relative;z-index:2;}
+.si{max-width:1240px;margin:0 auto;}
+.s-ey{display:inline-flex;align-items:center;gap:7px;font-size:.64rem;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:var(--v2);margin-bottom:12px;font-family:'DM Mono',monospace;}
+.s-ey::before{content:'//';opacity:.4;}
+.s-h2{font-family:'Oxanium',sans-serif;font-size:clamp(1.8rem,3.2vw,2.6rem);font-weight:800;letter-spacing:-.04em;line-height:1.1;color:var(--t1);margin-bottom:14px;}
+.s-h2 em{font-style:normal;-webkit-text-fill-color:transparent;background:linear-gradient(90deg,var(--v),var(--c));-webkit-background-clip:text;background-clip:text;}
+.s-desc{font-size:.96rem;color:var(--t2);line-height:1.82;max-width:560px;}
+
+/* ══════════════════════════════════════════════════
+   FEATURE BENTO
+══════════════════════════════════════════════════ */
+.bento{display:grid;grid-template-columns:repeat(12,1fr);gap:14px;}
+.bc{
+  background:var(--glass);border:1px solid var(--bd);border-radius:18px;
+  backdrop-filter:blur(20px);padding:26px;
+  position:relative;overflow:hidden;
+  transition:all .4s cubic-bezier(.23,1,.32,1);
+  cursor:default;
+}
+.bc::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:var(--cl,linear-gradient(90deg,transparent,rgba(91,63,255,.5),transparent));opacity:0;transition:opacity .3s;}
+.bc:hover{border-color:rgba(255,255,255,.12);transform:translateY(-5px);box-shadow:0 28px 70px rgba(0,0,0,.55);}
+.bc:hover::before{opacity:1;}
+.bc-a{grid-column:span 5;}  .bc-b{grid-column:span 4;}  .bc-c{grid-column:span 3;}
+.bc-d{grid-column:span 4;}  .bc-e{grid-column:span 4;}  .bc-f{grid-column:span 4;}
+.bi-wrap{width:46px;height:46px;border-radius:13px;display:flex;align-items:center;justify-content:center;font-size:1.3rem;margin-bottom:16px;transition:transform .3s;}
+.bc:hover .bi-wrap{transform:scale(1.1) rotate(-6deg);}
+.bc-tag{font-size:.6rem;font-weight:700;text-transform:uppercase;letter-spacing:.12em;padding:3px 9px;border-radius:20px;display:inline-block;margin-bottom:9px;font-family:'DM Mono',monospace;}
+.bc-title{font-family:'Oxanium',sans-serif;font-size:1.05rem;font-weight:700;letter-spacing:-.02em;color:var(--t1);margin-bottom:7px;}
+.bc-desc{font-size:.81rem;color:var(--t2);line-height:1.7;}
+.bc-arr{display:inline-flex;align-items:center;gap:5px;font-size:.74rem;font-weight:600;color:var(--t3);margin-top:14px;transition:all .2s;text-decoration:none;}
+.bc:hover .bc-arr{color:var(--c);gap:9px;}
+.bc-bg{position:absolute;bottom:-24px;right:-24px;font-size:5.5rem;opacity:.035;pointer-events:none;line-height:1;}
+
+/* ══════════════════════════════════════════════════
+   TOOL CARDS
+══════════════════════════════════════════════════ */
+.tg{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;}
+.tc{
+  background:var(--glass);border:1px solid var(--bd);border-radius:18px;
+  padding:26px 22px;text-decoration:none;color:var(--t1);
+  position:relative;overflow:hidden;
+  transition:all .4s cubic-bezier(.23,1,.32,1);display:block;
+}
+.tc:hover{transform:translateY(-7px) scale(1.015);box-shadow:var(--ts,0 22px 60px rgba(91,63,255,.22));border-color:var(--tb,rgba(91,63,255,.38));color:var(--t1);}
+.tc::after{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--tl,linear-gradient(90deg,var(--v),var(--v2)));transform:scaleX(0);transform-origin:left;transition:transform .4s cubic-bezier(.23,1,.32,1);}
+.tc:hover::after{transform:scaleX(1);}
+/* Glow orb inside card */
+.tc-orb{position:absolute;bottom:-60px;right:-60px;width:160px;height:160px;border-radius:50%;background:var(--to,var(--vg));filter:blur(40px);opacity:.12;pointer-events:none;transition:opacity .4s;}
+.tc:hover .tc-orb{opacity:.22;}
+.tc-n{font-size:.6rem;font-weight:700;letter-spacing:.14em;color:var(--t3);margin-bottom:16px;font-family:'DM Mono',monospace;}
+.tc-ico{width:50px;height:50px;border-radius:13px;display:flex;align-items:center;justify-content:center;font-size:1.35rem;margin-bottom:14px;transition:transform .3s;}
+.tc:hover .tc-ico{transform:scale(1.1) rotate(-5deg);}
+.tc-bdg{font-size:.58rem;font-weight:700;text-transform:uppercase;letter-spacing:.12em;padding:3px 9px;border-radius:20px;display:inline-block;margin-bottom:8px;font-family:'DM Mono',monospace;}
+.tc-title{font-family:'Oxanium',sans-serif;font-size:.98rem;font-weight:700;letter-spacing:-.02em;margin-bottom:7px;}
+.tc-desc{font-size:.79rem;color:var(--t2);line-height:1.65;margin-bottom:15px;}
+.tc-cta{display:flex;align-items:center;gap:5px;font-size:.74rem;font-weight:600;color:var(--t3);transition:all .2s;}
+.tc:hover .tc-cta{color:var(--t1);gap:9px;}
+
+/* ══════════════════════════════════════════════════
+   PIPELINE
+══════════════════════════════════════════════════ */
+.pipe-wrap{position:relative;}
+.pipe-line{position:absolute;top:39px;left:8%;right:8%;height:1px;background:linear-gradient(90deg,transparent,var(--bd2),transparent);z-index:0;}
+.pipe-steps{display:grid;grid-template-columns:repeat(5,1fr);position:relative;z-index:1;}
+.ps{display:flex;flex-direction:column;align-items:center;text-align:center;padding:0 10px;transition:all .25s;}
+.ps:hover .ps-orb{border-color:var(--v);box-shadow:0 0 0 4px rgba(91,63,255,.15),0 0 24px var(--vg);}
+.ps-orb{
+  width:78px;height:78px;border-radius:50%;
+  background:var(--deep);border:1px solid var(--bd2);
+  display:flex;align-items:center;justify-content:center;font-size:1.35rem;
+  margin-bottom:18px;transition:all .3s;position:relative;
+}
+.ps-orb::before{
+  content:attr(data-n);position:absolute;top:-9px;right:-9px;
+  width:24px;height:24px;border-radius:50%;
+  background:linear-gradient(135deg,var(--v),var(--c));
+  font-size:.58rem;font-weight:800;color:#fff;
+  display:flex;align-items:center;justify-content:center;font-family:'DM Mono',monospace;
+}
+.ps-badge{font-size:.58rem;font-weight:700;text-transform:uppercase;letter-spacing:.12em;padding:3px 10px;border-radius:20px;border:1px solid;margin-bottom:11px;font-family:'DM Mono',monospace;}
+.ps-t{font-family:'Oxanium',sans-serif;font-size:.9rem;font-weight:700;color:var(--t1);margin-bottom:6px;}
+.ps-d{font-size:.77rem;color:var(--t2);line-height:1.65;}
+
+/* ══════════════════════════════════════════════════
+   TECH STACK
+══════════════════════════════════════════════════ */
+.tech-band{background:var(--layer);border-top:1px solid var(--bd);border-bottom:1px solid var(--bd);padding:52px 40px;position:relative;z-index:2;}
+.tech-g{display:flex;flex-wrap:wrap;gap:9px;justify-content:center;}
+.ttech{display:flex;align-items:center;gap:8px;background:rgba(255,255,255,.025);border:1px solid var(--bd);border-radius:50px;padding:8px 17px;font-size:.78rem;font-weight:600;color:var(--t2);font-family:'DM Mono',monospace;transition:all .25s;cursor:default;}
+.ttech:hover{border-color:rgba(0,200,255,.4);color:var(--c);background:rgba(0,200,255,.04);}
+.tdot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
+
+/* ══════════════════════════════════════════════════
+   CTA
+══════════════════════════════════════════════════ */
+.cta-s{padding:96px 40px;position:relative;z-index:2;overflow:hidden;}
+.cta-radial{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:900px;height:500px;background:radial-gradient(ellipse,rgba(91,63,255,.1),transparent 70%);pointer-events:none;}
+.cta-box{
+  max-width:860px;margin:0 auto;
+  background:linear-gradient(135deg,rgba(7,14,36,.92),rgba(4,9,26,.96));
+  border:1px solid rgba(91,63,255,.22);
+  border-radius:28px;padding:72px 56px;text-align:center;
+  position:relative;overflow:hidden;
+  box-shadow:var(--sh2),0 0 100px rgba(91,63,255,.06);
+}
+.cta-box::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--v),var(--c),var(--g),var(--v),transparent);opacity:.8;}
+.cta-box::after{content:'';position:absolute;bottom:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(91,63,255,.3),transparent);}
+.cta-badge{display:inline-flex;align-items:center;gap:7px;background:rgba(0,255,179,.07);border:1px solid rgba(0,255,179,.2);border-radius:50px;padding:5px 15px;font-size:.67rem;font-weight:700;color:var(--g);text-transform:uppercase;letter-spacing:.12em;margin-bottom:22px;font-family:'DM Mono',monospace;}
+.cta-h2{font-family:'Oxanium',sans-serif;font-size:clamp(1.8rem,3vw,2.9rem);font-weight:800;letter-spacing:-.04em;line-height:1.08;margin-bottom:14px;}
+.cta-h2 em{font-style:normal;color:var(--c);}
+.cta-p{font-size:1rem;color:var(--t2);max-width:490px;margin:0 auto 34px;line-height:1.78;}
+.cta-btns{display:flex;gap:13px;justify-content:center;flex-wrap:wrap;}
+
+/* ══════════════════════════════════════════════════
+   FOOTER
+══════════════════════════════════════════════════ */
+footer{background:var(--void);border-top:1px solid var(--bd);padding:58px 40px 34px;position:relative;z-index:2;}
+.f-i{max-width:1240px;margin:0 auto;}
+.f-top{display:grid;grid-template-columns:310px 1fr;gap:60px;padding-bottom:46px;border-bottom:1px solid var(--bd);margin-bottom:34px;}
+.f-brand{font-family:'Oxanium',sans-serif;font-size:1.05rem;font-weight:800;letter-spacing:-.01em;color:var(--t1);margin-bottom:9px;}
+.f-sub{font-size:.8rem;color:var(--t3);line-height:1.72;margin-bottom:18px;}
+.f-badges{display:flex;gap:7px;flex-wrap:wrap;}
+.f-b{font-size:.62rem;font-weight:600;padding:3px 9px;border-radius:20px;border:1px solid var(--bd);color:var(--t3);font-family:'DM Mono',monospace;}
+.f-lg{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;}
+.f-ct{font-size:.63rem;font-weight:700;text-transform:uppercase;letter-spacing:.16em;color:var(--v2);margin-bottom:14px;font-family:'DM Mono',monospace;}
+.f-lk{display:flex;align-items:center;gap:7px;font-size:.8rem;color:var(--t3);text-decoration:none;margin-bottom:9px;transition:color .2s;}
+.f-lk:hover{color:var(--t1);}
+.f-lk i{font-size:.73rem;width:13px;}
+.f-bt{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;font-size:.74rem;color:var(--t3);font-family:'DM Mono',monospace;}
+.f-stat{display:flex;align-items:center;gap:6px;}
+.f-sd{width:6px;height:6px;border-radius:50%;background:var(--g);box-shadow:0 0 8px var(--g);animation:sdot 2s ease-in-out infinite;}
+@keyframes sdot{0%,100%{opacity:1;}50%{opacity:.3;}}
+
+/* ══════════════════════════════════════════════════
+   SCROLL REVEAL
+══════════════════════════════════════════════════ */
+.rv{opacity:0;transform:translateY(28px);transition:opacity .7s ease,transform .7s ease;}
+.rv.vis{opacity:1;transform:translateY(0);}
+.d1{transition-delay:.08s;} .d2{transition-delay:.16s;} .d3{transition-delay:.24s;} .d4{transition-delay:.32s;} .d5{transition-delay:.4s;}
+
+/* ══════════════════════════════════════════════════
+   RESPONSIVE
+══════════════════════════════════════════════════ */
+@media(max-width:1100px){
+  .hero-inner{grid-template-columns:1fr;gap:50px;}
+  .demo-wrap{max-width:520px;}
+  .bento{grid-template-columns:repeat(6,1fr);}
+  .bc-a,.bc-b,.bc-c{grid-column:span 3;} .bc-d,.bc-e,.bc-f{grid-column:span 2;}
+  .tg{grid-template-columns:repeat(2,1fr);}
+  .pipe-steps{grid-template-columns:repeat(3,1fr);gap:14px;}
+  .pipe-line{display:none;}
+  .sb{grid-template-columns:repeat(3,1fr);}
+  .f-top{grid-template-columns:1fr;gap:32px;}
+}
+@media(max-width:768px){
+  .s,.s-alt{padding:72px 20px;} #hero{padding:96px 20px 60px;} .topnav{padding:0 20px;}
+  .bento{grid-template-columns:1fr;} .bc-a,.bc-b,.bc-c,.bc-d,.bc-e,.bc-f{grid-column:span 1;}
+  .tg{grid-template-columns:1fr;} .pipe-steps{grid-template-columns:1fr 1fr;}
+  .sb{grid-template-columns:repeat(2,1fr);} .sb-item{border-right:none;border-bottom:1px solid var(--bd);}
+  .cta-box{padding:40px 22px;} .nav-links,.btn-docs{display:none;}
+  .f-lg{grid-template-columns:repeat(2,1fr);}
+  .tech-band{padding:40px 20px;}
+}
+</style>
+</head>
+<body>
+
+<!-- ══ BACKGROUND ══ -->
+<div class="bg-anim"></div>
+
+<!-- ══ NAVBAR ══ -->
+<nav class="topnav" id="topnav">
+  <a href="/" class="nav-brand">
+    <div class="brand-core">🧠</div>
+    <span class="brand-text">GenAI<span class="brand-dot">.</span>Mapper</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="/"><i class="bi bi-house-fill"></i> Home</a></li>
+    <li><a href="/map"><i class="bi bi-diagram-2-fill"></i> Map</a></li>
+    <li><a href="/dashboard"><i class="bi bi-speedometer2"></i> Dashboard</a></li>
+    <li class="dropdown">
+      <a href="#"><i class="bi bi-journals"></i> Research <i class="bi bi-chevron-down" style="font-size:.58rem;margin-left:2px;"></i></a>
+      <div class="drop-menu">
+        <a href="/research" class="drop-item"><div class="di" style="background:rgba(139,92,246,.2);color:#a78bfa;"><i class="bi bi-file-earmark-text-fill"></i></div>Paper Analyzer</a>
+        <a href="/benchmark" class="drop-item"><div class="di" style="background:rgba(0,229,160,.15);color:#00e5a0;"><i class="bi bi-trophy-fill"></i></div>Model Benchmark</a>
+        <a href="/datasets" class="drop-item"><div class="di" style="background:rgba(245,158,11,.15);color:#fbbf24;"><i class="bi bi-database-fill"></i></div>Dataset Explorer</a>
+        <a href="/citations" class="drop-item"><div class="di" style="background:rgba(255,77,109,.15);color:#ff7096;"><i class="bi bi-journal-bookmark-fill"></i></div>Citation Tracker</a>
+        <hr class="drop-div">
+        <a href="/gap-finder" class="drop-item"><div class="di" style="background:rgba(245,158,11,.15);color:#fbbf24;"><i class="bi bi-binoculars-fill"></i></div>Gap Finder</a>
+        <a href="/literature" class="drop-item"><div class="di" style="background:rgba(0,200,255,.12);color:#38bdf8;"><i class="bi bi-file-earmark-richtext-fill"></i></div>Literature Review</a>
+        <a href="/history" class="drop-item"><div class="di" style="background:rgba(139,92,246,.15);color:#c4b5fd;"><i class="bi bi-clock-history"></i></div>Analysis History</a>
+      </div>
+    </li>
+    <li><a href="/about"><i class="bi bi-info-circle-fill"></i> About</a></li>
+    <li><a href="/contact"><i class="bi bi-envelope-fill"></i> Contact</a></li>
+  </ul>
+  <div class="nav-ml">
+    <a href="/about" class="btn-docs">Docs</a>
+    <a href="/login" class="btn-get"><i class="bi bi-box-arrow-in-right"></i> Get Started</a>
+  </div>
+</nav>
+
+<!-- ══ HERO ══ -->
+<section id="hero">
+  <div class="hero-inner">
+    <div class="hero-copy">
+      <div class="hero-ey">
+        <div class="ey-pulse"><i class="bi bi-stars"></i></div>
+        spaCy · Groq LLaMA-3.3-70b · RAG · Cytoscape.js
+      </div>
+      <h1 class="hero-h1">
+        <span class="h1-static">NLP that</span>
+        <span class="h1-typed-wrap"><span id="typewriter">Maps Knowledge</span><span class="cursor"></span></span>
+        <span class="h1-sub">for Academic Researchers</span>
+      </h1>
+      <p class="hero-desc">The professional AI-powered NLP research platform. Extract named entities, visualize knowledge graphs, benchmark models, get AI summaries and RAG-powered answers — fully automated, all in one place.</p>
+      <div class="hero-btns">
+        <a href="/map" class="btn-prime"><i class="bi bi-lightning-charge-fill"></i> Start Analyzing Free</a>
+        <a href="/research" class="btn-sec"><i class="bi bi-play-circle-fill"></i> See It In Action</a>
+      </div>
+      <div class="trust">
+        <span class="trust-lbl">Powered by</span>
+        <div class="trust-pills">
+          <span class="tp">spaCy NLP</span><span class="tp">Groq API</span>
+          <span class="tp">LLaMA-3.3-70b</span><span class="tp">RAG Engine</span><span class="tp">Cytoscape.js</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- LIVE AUTO-CYCLING DEMO CARD -->
+    <div class="demo-wrap">
+      <div class="demo-card">
+        <div class="demo-bar">
+          <div class="d-dots"><div class="ddot d1"></div><div class="ddot d2"></div><div class="ddot d3"></div></div>
+          <span style="font-size:.68rem;color:var(--t3);font-family:'DM Mono',monospace;margin-left:12px;">nlp_mapper.py — live analysis</span>
+          <span class="demo-live"><div class="live-dot"></div>LIVE</span>
+        </div>
+        <div class="demo-body">
+          <div class="dlbl">Input Text</div>
+          <div class="demo-txt" id="demo-txt">
+            <span class="hl-p">Yoshua Bengio</span> and <span class="hl-p">Geoffrey Hinton</span> at <span class="hl-o">Google DeepMind</span> published a paper in <span class="hl-d">2023</span> from <span class="hl-l">Montreal</span>.
+          </div>
+          <div class="dlbl">Extracted Entities</div>
+          <div class="demo-ents" id="demo-ents">
+            <span class="ent ep"><i class="bi bi-dot"></i>Yoshua Bengio · PERSON</span>
+            <span class="ent ep"><i class="bi bi-dot"></i>Geoffrey Hinton · PERSON</span>
+            <span class="ent eo"><i class="bi bi-dot"></i>Google DeepMind · ORG</span>
+            <span class="ent ed"><i class="bi bi-dot"></i>2023 · DATE</span>
+            <span class="ent el"><i class="bi bi-dot"></i>Montreal · LOC</span>
+          </div>
+          <div class="dlbl">Analysis Metrics</div>
+          <div class="demo-mets">
+            <div class="dm"><div class="dm-n" id="dm0" style="color:#a78bfa;">5</div><div class="dm-l">Entities</div></div>
+            <div class="dm"><div class="dm-n" id="dm1" style="color:#00ffb3;">3</div><div class="dm-l">Relations</div></div>
+            <div class="dm"><div class="dm-n" id="dm2" style="color:#38bdf8;">94%</div><div class="dm-l">Confidence</div></div>
+          </div>
+          <div class="demo-progress">
+            <div class="prog-row"><span>Pipeline Progress</span><span id="prog-pct" style="color:var(--c);">100%</span></div>
+            <div class="prog-bar"><div class="prog-fill" id="prog-fill" style="width:100%;"></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══ TICKER ══ -->
+<div class="ticker-wrap" style="position:relative;z-index:3;">
+  <div class="ticker-track">
+    <span class="ti"><span class="til">Named Entity Recognition</span><span class="ti-sep">✦</span></span>
+    <span class="ti"><span class="til">Knowledge Graph Mapping</span><span class="ti-sep">✦</span></span>
+    <span class="ti"><span class="til">SVO Relation Extraction</span><span class="ti-sep">✦</span></span>
+    <span class="ti"><span class="til">LLaMA-3.3-70b Summarization</span><span class="ti-sep">✦</span></span>
+    <span class="ti"><span class="til">Constituency Parse Trees</span><span class="ti-sep">✦</span></span>
+    <span class="ti"><span class="til">RAG-Powered Q&amp;A</span><span class="ti-sep">✦</span></span>
+    <span class="ti"><span class="til">Model Benchmarking</span><span class="ti-sep">✦</span></span>
+    <span class="ti"><span class="til">Citation Graph Builder</span><span class="ti-sep">✦</span></span>
+    <span class="ti"><span class="til">POS Tag Analysis</span><span class="ti-sep">✦</span></span>
+    <span class="ti"><span class="til">Research Gap Finder</span><span class="ti-sep">✦</span></span>
+    <span class="ti"><span class="til">Literature Review Generator</span><span class="ti-sep">✦</span></span>
+    <span class="ti"><span class="til">Analysis History Tracking</span><span class="ti-sep">✦</span></span>
+    <span class="ti"><span class="til">Named Entity Recognition</span><span class="ti-sep">✦</span></span>
+    <span class="ti"><span class="til">Knowledge Graph Mapping</span><span class="ti-sep">✦</span></span>
+    <span class="ti"><span class="til">SVO Relation Extraction</span><span class="ti-sep">✦</span></span>
+    <span class="ti"><span class="til">LLaMA-3.3-70b Summarization</span><span class="ti-sep">✦</span></span>
+    <span class="ti"><span class="til">Constituency Parse Trees</span><span class="ti-sep">✦</span></span>
+    <span class="ti"><span class="til">RAG-Powered Q&amp;A</span><span class="ti-sep">✦</span></span>
+    <span class="ti"><span class="til">Model Benchmarking</span><span class="ti-sep">✦</span></span>
+    <span class="ti"><span class="til">Citation Graph Builder</span><span class="ti-sep">✦</span></span>
+    <span class="ti"><span class="til">POS Tag Analysis</span><span class="ti-sep">✦</span></span>
+    <span class="ti"><span class="til">Research Gap Finder</span><span class="ti-sep">✦</span></span>
+    <span class="ti"><span class="til">Literature Review Generator</span><span class="ti-sep">✦</span></span>
+    <span class="ti"><span class="til">Analysis History Tracking</span><span class="ti-sep">✦</span></span>
+  </div>
+</div>
+
+<!-- ══ STATS ══ -->
+<div class="sb-wrap">
+  <div class="sb">
+    <div class="sb-item rv"><span class="sb-num" data-target="10">10</span><div class="sb-lbl">Entity Types</div></div>
+    <div class="sb-item rv d1"><span class="sb-num">70B</span><div class="sb-lbl">LLaMA Parameters</div></div>
+    <div class="sb-item rv d2"><span class="sb-num" data-target="8">8</span><div class="sb-lbl">Research Tools</div></div>
+    <div class="sb-item rv d3"><span class="sb-num">RAG</span><div class="sb-lbl">Powered Q&amp;A</div></div>
+    <div class="sb-item rv d4"><span class="sb-num" data-target="5">5</span><div class="sb-lbl">Pipeline Stages</div></div>
+  </div>
+</div>
+
+<!-- ══ CORE CAPABILITIES ══ -->
+<section class="s">
+  <div class="si">
+    <div class="text-center mb-5 rv">
+      <div class="s-ey">Core Capabilities</div>
+      <h2 class="s-h2">Everything You Need to<br><em>Understand Any Text</em></h2>
+      <p class="s-desc mx-auto text-center" style="max-width:600px;">A fully automated NLP pipeline — paste text or upload a file and instantly get entities, relations, summaries, parse trees and AI answers.</p>
+    </div>
+    <div class="bento">
+      <div class="bc bc-a rv" style="--cl:linear-gradient(90deg,transparent,rgba(91,63,255,.6),transparent);">
+        <div class="bi-wrap" style="background:rgba(91,63,255,.15);color:#a78bfa;"><i class="bi bi-search-heart-fill"></i></div>
+        <div class="bc-tag" style="background:rgba(91,63,255,.1);color:#a78bfa;border:1px solid rgba(91,63,255,.25);">spaCy NER</div>
+        <div class="bc-title">Named Entity Recognition</div>
+        <div class="bc-desc">Auto-detect PERSON, ORG, GPE, LOC, DATE, MONEY and 4 more entity types from any text. Industrial-strength precision with spaCy's full NLP pipeline.</div>
+        <a href="/map" class="bc-arr">Explore <i class="bi bi-arrow-right"></i></a>
+        <div class="bc-bg" style="color:#a78bfa;">⬡</div>
+      </div>
+      <div class="bc bc-b rv d1" style="--cl:linear-gradient(90deg,transparent,rgba(0,200,255,.5),transparent);">
+        <div class="bi-wrap" style="background:rgba(0,200,255,.12);color:#38bdf8;"><i class="bi bi-diagram-3-fill"></i></div>
+        <div class="bc-tag" style="background:rgba(0,200,255,.1);color:#38bdf8;border:1px solid rgba(0,200,255,.25);">Cytoscape.js</div>
+        <div class="bc-title">Knowledge Graph Mapping</div>
+        <div class="bc-desc">Visualize subject–verb–object triples as interactive force graphs. Zoom, pan and explore relationships live.</div>
+        <a href="/map" class="bc-arr">Explore <i class="bi bi-arrow-right"></i></a>
+        <div class="bc-bg" style="color:#38bdf8;">◈</div>
+      </div>
+      <div class="bc bc-c rv d2" style="--cl:linear-gradient(90deg,transparent,rgba(0,255,179,.5),transparent);">
+        <div class="bi-wrap" style="background:rgba(0,255,179,.1);color:#00ffb3;"><i class="bi bi-robot"></i></div>
+        <div class="bc-tag" style="background:rgba(0,255,179,.08);color:#00ffb3;border:1px solid rgba(0,255,179,.22);">LLaMA-70b</div>
+        <div class="bc-title">AI Summarization</div>
+        <div class="bc-desc">Abstractive 3–5 sentence summaries via Groq's LLaMA-3.3-70b in milliseconds.</div>
+        <a href="/map" class="bc-arr">Explore <i class="bi bi-arrow-right"></i></a>
+      </div>
+      <div class="bc bc-d rv d1" style="--cl:linear-gradient(90deg,transparent,rgba(255,77,109,.5),transparent);">
+        <div class="bi-wrap" style="background:rgba(255,77,109,.12);color:#ff7096;"><i class="bi bi-chat-dots-fill"></i></div>
+        <div class="bc-tag" style="background:rgba(255,77,109,.1);color:#ff7096;border:1px solid rgba(255,77,109,.25);">RAG Engine</div>
+        <div class="bc-title">Context-Aware Q&amp;A</div>
+        <div class="bc-desc">Ask anything about your document. Chunked retrieval + Groq LLM returns pinpoint answers in real time.</div>
+        <a href="/map" class="bc-arr">Explore <i class="bi bi-arrow-right"></i></a>
+        <div class="bc-bg" style="color:#ff7096;">◎</div>
+      </div>
+      <div class="bc bc-e rv d2" style="--cl:linear-gradient(90deg,transparent,rgba(91,63,255,.5),transparent);">
+        <div class="bi-wrap" style="background:rgba(91,63,255,.12);color:#a78bfa;"><i class="bi bi-diagram-2-fill"></i></div>
+        <div class="bc-tag" style="background:rgba(91,63,255,.1);color:#a78bfa;border:1px solid rgba(91,63,255,.25);">Penn Treebank</div>
+        <div class="bc-title">Constituency Parse Trees</div>
+        <div class="bc-desc">Visual SVG parse trees for any sentence. Full POS, lemma and dependency data included automatically.</div>
+        <a href="/map" class="bc-arr">Explore <i class="bi bi-arrow-right"></i></a>
+      </div>
+      <div class="bc bc-f rv d3" style="--cl:linear-gradient(90deg,transparent,rgba(0,200,255,.5),transparent);">
+        <div class="bi-wrap" style="background:rgba(0,200,255,.1);color:#38bdf8;"><i class="bi bi-clock-history"></i></div>
+        <div class="bc-tag" style="background:rgba(0,200,255,.08);color:#38bdf8;border:1px solid rgba(0,200,255,.22);">Auto-Save</div>
+        <div class="bc-title">Analysis History</div>
+        <div class="bc-desc">Every analysis auto-saved locally. Search, filter, compare and export across all sessions.</div>
+        <a href="/history" class="bc-arr">View History <i class="bi bi-arrow-right"></i></a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══ RESEARCH TOOLS ══ -->
+<section class="s-alt">
+  <div class="si">
+    <div style="display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:44px;gap:20px;flex-wrap:wrap;" class="rv">
+      <div>
+        <div class="s-ey">Research Toolkit</div>
+        <h2 class="s-h2">Advanced Tools for<br><em>Paper Intelligence</em></h2>
+      </div>
+      <p class="s-desc" style="max-width:360px;text-align:right;">Purpose-built for NLP researchers — automated intelligence at every step.</p>
+    </div>
+    <div class="tg">
+      <a href="/research" class="tc" style="--ts:0 22px 60px rgba(91,63,255,.22);--tb:rgba(91,63,255,.38);--tl:linear-gradient(90deg,#5b3fff,#8b5cf6);--to:rgba(91,63,255,.4);">
+        <div class="tc-orb"></div><div class="tc-n">01 / RESEARCH</div>
+        <div class="tc-ico" style="background:rgba(91,63,255,.15);color:#a78bfa;"><i class="bi bi-file-earmark-text-fill"></i></div>
+        <div class="tc-bdg" style="background:rgba(91,63,255,.1);color:#a78bfa;border:1px solid rgba(91,63,255,.25);">Paper Analyzer</div>
+        <div class="tc-title">Research Paper Analyzer</div>
+        <div class="tc-desc">Paste any academic paper. Auto-extract entities, relations, and get an AI-generated summary instantly.</div>
+        <div class="tc-cta">Open Tool <i class="bi bi-arrow-right"></i></div>
+      </a>
+      <a href="/benchmark" class="tc" style="--ts:0 22px 60px rgba(0,255,179,.18);--tb:rgba(0,255,179,.38);--tl:linear-gradient(90deg,#00ffb3,#06b6d4);--to:rgba(0,255,179,.3);">
+        <div class="tc-orb"></div><div class="tc-n">02 / BENCHMARK</div>
+        <div class="tc-ico" style="background:rgba(0,255,179,.12);color:#00ffb3;"><i class="bi bi-bar-chart-steps"></i></div>
+        <div class="tc-bdg" style="background:rgba(0,255,179,.08);color:#00ffb3;border:1px solid rgba(0,255,179,.22);">Model Compare</div>
+        <div class="tc-title">Model Benchmarking</div>
+        <div class="tc-desc">Auto-compare spaCy sm vs lg vs Groq LLaMA — entity count, confidence, inference speed side-by-side.</div>
+        <div class="tc-cta">Open Tool <i class="bi bi-arrow-right"></i></div>
+      </a>
+      <a href="/datasets" class="tc" style="--ts:0 22px 60px rgba(245,158,11,.18);--tb:rgba(245,158,11,.38);--tl:linear-gradient(90deg,#f59e0b,#ef4444);--to:rgba(245,158,11,.3);">
+        <div class="tc-orb"></div><div class="tc-n">03 / DATASETS</div>
+        <div class="tc-ico" style="background:rgba(245,158,11,.12);color:#fbbf24;"><i class="bi bi-database-fill-gear"></i></div>
+        <div class="tc-bdg" style="background:rgba(245,158,11,.08);color:#fbbf24;border:1px solid rgba(245,158,11,.22);">Dataset Explorer</div>
+        <div class="tc-title">Dataset Explorer</div>
+        <div class="tc-desc">Upload CSV or TXT datasets. Auto-generate token distributions, entity heatmaps and downloadable reports.</div>
+        <div class="tc-cta">Open Tool <i class="bi bi-arrow-right"></i></div>
+      </a>
+      <a href="/citations" class="tc" style="--ts:0 22px 60px rgba(255,77,109,.18);--tb:rgba(255,77,109,.38);--tl:linear-gradient(90deg,#ff4d6d,#ec4899);--to:rgba(255,77,109,.3);">
+        <div class="tc-orb"></div><div class="tc-n">04 / CITATIONS</div>
+        <div class="tc-ico" style="background:rgba(255,77,109,.12);color:#ff7096;"><i class="bi bi-journal-bookmark-fill"></i></div>
+        <div class="tc-bdg" style="background:rgba(255,77,109,.08);color:#ff7096;border:1px solid rgba(255,77,109,.22);">Citation Tracker</div>
+        <div class="tc-title">Citation Tracker</div>
+        <div class="tc-desc">Auto-detect [Author, Year] references. Build visual citation graphs and export BibTeX automatically.</div>
+        <div class="tc-cta">Open Tool <i class="bi bi-arrow-right"></i></div>
+      </a>
+      <a href="/gap-finder" class="tc" style="--ts:0 22px 60px rgba(245,158,11,.18);--tb:rgba(245,158,11,.38);--tl:linear-gradient(90deg,#f59e0b,#8b5cf6);--to:rgba(245,158,11,.3);">
+        <div class="tc-orb"></div><div class="tc-n">05 / GAP FINDER</div>
+        <div class="tc-ico" style="background:rgba(245,158,11,.12);color:#fbbf24;"><i class="bi bi-binoculars-fill"></i></div>
+        <div class="tc-bdg" style="background:rgba(245,158,11,.08);color:#fbbf24;border:1px solid rgba(245,158,11,.22);">Gap Finder</div>
+        <div class="tc-title">Research Gap Finder</div>
+        <div class="tc-desc">AI automatically identifies under-explored areas in your research corpus. Find your next publication topic.</div>
+        <div class="tc-cta">Open Tool <i class="bi bi-arrow-right"></i></div>
+      </a>
+      <a href="/literature" class="tc" style="--ts:0 22px 60px rgba(0,200,255,.18);--tb:rgba(0,200,255,.38);--tl:linear-gradient(90deg,#00c8ff,#6366f1);--to:rgba(0,200,255,.3);">
+        <div class="tc-orb"></div><div class="tc-n">06 / LITERATURE</div>
+        <div class="tc-ico" style="background:rgba(0,200,255,.1);color:#38bdf8;"><i class="bi bi-file-earmark-richtext-fill"></i></div>
+        <div class="tc-bdg" style="background:rgba(0,200,255,.07);color:#38bdf8;border:1px solid rgba(0,200,255,.22);">Lit Review</div>
+        <div class="tc-title">Literature Review Generator</div>
+        <div class="tc-desc">Auto-generate structured literature reviews from multiple papers with AI-powered synthesis.</div>
+        <div class="tc-cta">Open Tool <i class="bi bi-arrow-right"></i></div>
+      </a>
+      <a href="/history" class="tc" style="--ts:0 22px 60px rgba(139,92,246,.18);--tb:rgba(139,92,246,.38);--tl:linear-gradient(90deg,#8b5cf6,#5b3fff);--to:rgba(139,92,246,.3);">
+        <div class="tc-orb"></div><div class="tc-n">07 / HISTORY</div>
+        <div class="tc-ico" style="background:rgba(139,92,246,.12);color:#c4b5fd;"><i class="bi bi-clock-history"></i></div>
+        <div class="tc-bdg" style="background:rgba(139,92,246,.08);color:#c4b5fd;border:1px solid rgba(139,92,246,.22);">Auto-Save</div>
+        <div class="tc-title">Analysis History</div>
+        <div class="tc-desc">All analyses auto-saved locally. Search, filter, re-export as CSV/JSON — always accessible.</div>
+        <div class="tc-cta">View History <i class="bi bi-arrow-right"></i></div>
+      </a>
+      <a href="/dashboard" class="tc" style="--ts:0 22px 60px rgba(0,200,255,.18);--tb:rgba(0,200,255,.38);--tl:linear-gradient(90deg,#00c8ff,#5b3fff);--to:rgba(0,200,255,.3);">
+        <div class="tc-orb"></div><div class="tc-n">08 / DASHBOARD</div>
+        <div class="tc-ico" style="background:rgba(0,200,255,.1);color:#38bdf8;"><i class="bi bi-speedometer2"></i></div>
+        <div class="tc-bdg" style="background:rgba(0,200,255,.07);color:#38bdf8;border:1px solid rgba(0,200,255,.22);">Analytics</div>
+        <div class="tc-title">Research Dashboard</div>
+        <div class="tc-desc">Aggregate analytics — entity distributions, relation charts, confidence trends across all analyses.</div>
+        <div class="tc-cta">Open Dashboard <i class="bi bi-arrow-right"></i></div>
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- ══ PIPELINE ══ -->
+<section class="s">
+  <div class="si">
+    <div class="text-center mb-5 rv">
+      <div class="s-ey">Automated NLP Pipeline</div>
+      <h2 class="s-h2">How It Works</h2>
+      <p class="s-desc mx-auto text-center" style="max-width:580px;">Your text travels through a 5-stage automated pipeline combining classical NLP with generative AI — zero configuration required.</p>
+    </div>
+    <div class="pipe-wrap rv">
+      <div class="pipe-line"></div>
+      <div class="pipe-steps">
+        <div class="ps">
+          <div class="ps-orb" data-n="01" style="border-color:rgba(0,200,255,.3);"><i class="bi bi-input-cursor-text" style="color:#38bdf8;"></i></div>
+          <div class="ps-badge" style="background:rgba(0,200,255,.07);color:#38bdf8;border-color:rgba(0,200,255,.2);">regex · norm</div>
+          <div class="ps-t">Text Ingestion</div>
+          <div class="ps-d">Normalize whitespace, strip noise, handle encoding. Supports .txt and .docx files.</div>
+        </div>
+        <div class="ps">
+          <div class="ps-orb" data-n="02" style="border-color:rgba(91,63,255,.3);"><i class="bi bi-tags-fill" style="color:#a78bfa;"></i></div>
+          <div class="ps-badge" style="background:rgba(91,63,255,.07);color:#a78bfa;border-color:rgba(91,63,255,.2);">spaCy NER</div>
+          <div class="ps-t">Entity Recognition</div>
+          <div class="ps-d">Auto-identify PERSON, ORG, GPE, LOC, DATE, MONEY and 4 more entity types.</div>
+        </div>
+        <div class="ps">
+          <div class="ps-orb" data-n="03" style="border-color:rgba(0,255,179,.3);"><i class="bi bi-bezier2" style="color:#00ffb3;"></i></div>
+          <div class="ps-badge" style="background:rgba(0,255,179,.07);color:#00ffb3;border-color:rgba(0,255,179,.2);">dep parse</div>
+          <div class="ps-t">Relation Extraction</div>
+          <div class="ps-d">Auto-extract subject–verb–object triples via dependency parsing and normalization.</div>
+        </div>
+        <div class="ps">
+          <div class="ps-orb" data-n="04" style="border-color:rgba(255,77,109,.3);"><i class="bi bi-robot" style="color:#ff7096;"></i></div>
+          <div class="ps-badge" style="background:rgba(255,77,109,.07);color:#ff7096;border-color:rgba(255,77,109,.2);">LLaMA-70b</div>
+          <div class="ps-t">AI Summarization</div>
+          <div class="ps-d">Groq-powered abstractive summarization focused on key entities and relationships.</div>
+        </div>
+        <div class="ps">
+          <div class="ps-orb" data-n="05" style="border-color:rgba(245,158,11,.3);"><i class="bi bi-chat-dots-fill" style="color:#fbbf24;"></i></div>
+          <div class="ps-badge" style="background:rgba(245,158,11,.07);color:#fbbf24;border-color:rgba(245,158,11,.2);">RAG</div>
+          <div class="ps-t">Contextual Q&amp;A</div>
+          <div class="ps-d">Auto-indexing + Groq LLM answers any question about your document in real time.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══ TECH STACK ══ -->
+<div class="tech-band">
+  <div class="si text-center">
+    <div class="s-ey" style="justify-content:center;margin-bottom:22px;">Powered By</div>
+    <div class="tech-g">
+      <div class="ttech"><span class="tdot" style="background:#4B8BBE;"></span>Python 3.11</div>
+      <div class="ttech"><span class="tdot" style="background:#e74c3c;"></span>Flask</div>
+      <div class="ttech"><span class="tdot" style="background:#09a3d5;"></span>spaCy NLP</div>
+      <div class="ttech"><span class="tdot" style="background:#f6a623;"></span>Groq API</div>
+      <div class="ttech"><span class="tdot" style="background:#9b59b6;"></span>LLaMA 3.3-70b</div>
+      <div class="ttech"><span class="tdot" style="background:#2ecc71;"></span>RAG Engine</div>
+      <div class="ttech"><span class="tdot" style="background:#3498db;"></span>Cytoscape.js</div>
+      <div class="ttech"><span class="tdot" style="background:#1abc9c;"></span>Chart.js</div>
+      <div class="ttech"><span class="tdot" style="background:#e67e22;"></span>Bootstrap 5</div>
+      <div class="ttech"><span class="tdot" style="background:#5b3fff;"></span>Canvas Neural Net</div>
+      <div class="ttech"><span class="tdot" style="background:#a78bfa;"></span>Oxanium · DM Mono</div>
+      <div class="ttech"><span class="tdot" style="background:#00ffb3;"></span>localStorage API</div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ CTA ══ -->
+<section class="cta-s">
+  <div class="cta-radial"></div>
+  <div class="cta-box rv">
+    <div class="cta-badge"><i class="bi bi-rocket-takeoff-fill"></i> Fully Automated · Free · No Sign-up</div>
+    <h2 class="cta-h2">The All-in-One<br><em>AI Research Platform</em></h2>
+    <p class="cta-p">Analyze papers, benchmark models, explore datasets, track citations, map knowledge graphs — everything automated, everything instant.</p>
+    <div class="cta-btns">
+      <a href="/map" class="btn-prime"><i class="bi bi-lightning-charge-fill"></i> Launch Knowledge Mapper</a>
+      <a href="/dashboard" class="btn-sec"><i class="bi bi-speedometer2"></i> View Dashboard</a>
+    </div>
+  </div>
+</section>
+
+<!-- ══ FOOTER ══ -->
+<footer>
+  <div class="f-i">
+    <div class="f-top">
+      <div>
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
+          <div class="brand-core" style="width:34px;height:34px;border-radius:9px;">🧠</div>
+          <div class="f-brand">GenAI<span style="color:var(--c);">.</span>Mapper</div>
+        </div>
+        <div class="f-sub">The NLP Research Platform Built for Academics and Developers. Fully automated entity extraction, knowledge mapping, and AI-powered insights.</div>
+        <div class="f-badges">
+          <span class="f-b">spaCy NLP</span><span class="f-b">Groq LLaMA-70b</span>
+          <span class="f-b">RAG Engine</span><span class="f-b">Bootstrap 5</span>
+        </div>
+      </div>
+      <div class="f-lg">
+        <div>
+          <div class="f-ct">Platform</div>
+          <a href="/" class="f-lk"><i class="bi bi-house-door"></i> Home</a>
+          <a href="/map" class="f-lk"><i class="bi bi-diagram-3"></i> Knowledge Map</a>
+          <a href="/dashboard" class="f-lk"><i class="bi bi-speedometer2"></i> Dashboard</a>
+          <a href="/history" class="f-lk"><i class="bi bi-clock-history"></i> History</a>
+        </div>
+        <div>
+          <div class="f-ct">Research</div>
+          <a href="/research" class="f-lk"><i class="bi bi-file-earmark-text"></i> Paper Analyzer</a>
+          <a href="/benchmark" class="f-lk"><i class="bi bi-bar-chart-steps"></i> Benchmark</a>
+          <a href="/datasets" class="f-lk"><i class="bi bi-database-fill"></i> Datasets</a>
+          <a href="/citations" class="f-lk"><i class="bi bi-journal-bookmark"></i> Citations</a>
+          <a href="/gap-finder" class="f-lk"><i class="bi bi-binoculars-fill"></i> Gap Finder</a>
+          <a href="/literature" class="f-lk"><i class="bi bi-file-earmark-richtext"></i> Literature</a>
+        </div>
+        <div>
+          <div class="f-ct">Company</div>
+          <a href="/about" class="f-lk"><i class="bi bi-info-circle"></i> About</a>
+          <a href="/contact" class="f-lk"><i class="bi bi-envelope"></i> Contact</a>
+        </div>
+      </div>
+    </div>
+    <div class="f-bt">
+      <span>© 2026 GenAI Knowledge Mapper · Developed by Neelima Pasala</span>
+      <div class="f-stat"><div class="f-sd"></div>All systems operational</div>
+      <span>Powered by Generative AI &amp; Natural Language Processing</span>
+    </div>
+  </div>
+</footer>
+
+<!-- ════════════════════════════════════════
+     SCRIPTS
+════════════════════════════════════════ -->
+<script>
+/* ══════════════════════════════════════════════
+   1. TYPEWRITER EFFECT
+══════════════════════════════════════════════ */
+(function() {
+  const phrases = ['Maps Knowledge','Decodes Language','Extracts Entities','Finds Relations','Accelerates Research','Parses Syntax','Tracks Citations','Benchmarks Models'];
+  let pi = 0, ci = 0, deleting = false;
+  const el = document.getElementById('typewriter');
+  if (!el) return;
+
+  function type() {
+    const phrase = phrases[pi];
+    if (!deleting) {
+      el.textContent = phrase.slice(0, ++ci);
+      if (ci === phrase.length) { deleting = true; setTimeout(type, 2200); return; }
+      setTimeout(type, 68);
+    } else {
+      el.textContent = phrase.slice(0, --ci);
+      if (ci === 0) { deleting = false; pi = (pi + 1) % phrases.length; setTimeout(type, 380); return; }
+      setTimeout(type, 36);
+    }
+  }
+  setTimeout(type, 1200);
+})();
+
+/* ══════════════════════════════════════════════
+   3. NAVBAR SCROLL
+══════════════════════════════════════════════ */
+const nav = document.getElementById('topnav');
+window.addEventListener('scroll', () => nav.classList.toggle('scrolled', scrollY > 30), { passive: true });
+
+/* ══════════════════════════════════════════════
+   4. SCROLL REVEAL
+══════════════════════════════════════════════ */
+const rvObs = new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) e.target.classList.add('vis'); }), { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
+document.querySelectorAll('.rv').forEach(el => rvObs.observe(el));
+
+/* ══════════════════════════════════════════════
+   5. COUNTER ANIMATION
+══════════════════════════════════════════════ */
+const cntObs = new IntersectionObserver(es => es.forEach(e => {
+  if (!e.isIntersecting) return;
+  const el = e.target, target = parseInt(el.dataset.target);
+  if (!target) return;
+  let v = 0; const step = target / 45;
+  const tm = setInterval(() => { v += step; if (v >= target) { el.textContent = target; clearInterval(tm); } else el.textContent = Math.floor(v); }, 26);
+  cntObs.unobserve(el);
+}), { threshold: 0.5 });
+document.querySelectorAll('[data-target]').forEach(el => cntObs.observe(el));
+
+/* ══════════════════════════════════════════════
+   6. AUTO-CYCLING LIVE DEMO CARD
+══════════════════════════════════════════════ */
+(function() {
+  const demos = [
+    {
+      text:`<span class="hl-p">Yoshua Bengio</span> and <span class="hl-p">Geoffrey Hinton</span> at <span class="hl-o">Google DeepMind</span> published a paper in <span class="hl-d">2023</span> from <span class="hl-l">Montreal</span>.`,
+      ents:[['ep','Yoshua Bengio · PERSON'],['ep','Geoffrey Hinton · PERSON'],['eo','Google DeepMind · ORG'],['ed','2023 · DATE'],['el','Montreal · LOC']],
+      m:['5','3','94%'], prog: 100
+    },
+    {
+      text:`<span class="hl-o">OpenAI</span> released <span class="hl-o">GPT-4</span> in <span class="hl-d">March 2023</span>, developed by <span class="hl-p">Sam Altman</span> in <span class="hl-l">San Francisco</span>.`,
+      ents:[['eo','OpenAI · ORG'],['eo','GPT-4 · ORG'],['ep','Sam Altman · PERSON'],['ed','March 2023 · DATE'],['el','San Francisco · LOC']],
+      m:['5','2','91%'], prog: 91
+    },
+    {
+      text:`<span class="hl-p">Yann LeCun</span> leads AI research at <span class="hl-o">Meta AI</span>, publishing work on <span class="hl-o">JEPA</span> in <span class="hl-d">2024</span> from <span class="hl-l">New York</span>.`,
+      ents:[['ep','Yann LeCun · PERSON'],['eo','Meta AI · ORG'],['eo','JEPA · ORG'],['ed','2024 · DATE'],['el','New York · LOC']],
+      m:['5','4','97%'], prog: 97
+    },
+    {
+      text:`The <span class="hl-o">ACL 2024</span> conference in <span class="hl-l">Bangkok</span> featured work by <span class="hl-p">Christopher Manning</span> from <span class="hl-o">Stanford NLP</span>.`,
+      ents:[['eo','ACL 2024 · ORG'],['el','Bangkok · LOC'],['ep','Christopher Manning · PERSON'],['eo','Stanford NLP · ORG']],
+      m:['4','3','89%'], prog: 89
+    }
+  ];
+
+  let idx = 0;
+  const txtEl  = document.getElementById('demo-txt');
+  const entEl  = document.getElementById('demo-ents');
+  const pfill  = document.getElementById('prog-fill');
+  const ppct   = document.getElementById('prog-pct');
+
+  function cycle() {
+    idx = (idx + 1) % demos.length;
+    const d = demos[idx];
+
+    /* Step 1: fade out + show "processing" */
+    txtEl.style.opacity = '0';
+    entEl.style.opacity = '0';
+    pfill.style.width = '0%';
+    ppct.textContent = '0%';
+
+    /* Step 2: typing simulation */
+    let progress = 0;
+    const progTick = setInterval(() => {
+      progress = Math.min(progress + Math.random() * 8 + 3, d.prog);
+      pfill.style.width = progress + '%';
+      ppct.textContent  = Math.floor(progress) + '%';
+      if (progress >= d.prog) { clearInterval(progTick); showResult(d); }
+    }, 60);
+  }
+
+  function showResult(d) {
+    setTimeout(() => {
+      txtEl.innerHTML = d.text;
+      entEl.innerHTML = d.ents.map(([cls, lbl]) => `<span class="ent ${cls}"><i class="bi bi-dot"></i>${lbl}</span>`).join('');
+      ['dm0','dm1','dm2'].forEach((id, i) => { const el = document.getElementById(id); if (el) el.textContent = d.m[i]; });
+      txtEl.style.transition = 'opacity .5s'; txtEl.style.opacity = '1';
+      entEl.style.transition = 'opacity .5s'; entEl.style.opacity = '1';
+    }, 200);
+  }
+
+  /* Initial opacity */
+  if (txtEl) txtEl.style.opacity = '1';
+  if (entEl) entEl.style.opacity = '1';
+
+  setInterval(cycle, 4500);
+})();
+</script>
+</body>
+</html>
